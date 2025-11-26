@@ -1,0 +1,10 @@
+Project name       |Test Project
+Company name       |Vandalay Industries
+Facility name      |Reactor A
+Facility address   |100 Main Street
+Contact person     |Contact Person
+Contact phone #    |919-000-0000
+Number of nuclides |3
+Name,SLG,Amnt(Ci/y)|I-131,G,2.0E-03
+Name,SLG,Amnt(Ci/y)|SE-75,G,2.0E-03
+Name,SLG,Amnt(Ci/y)|SR-85,L,3.5E+00
