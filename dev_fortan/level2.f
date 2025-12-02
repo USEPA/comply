@@ -43,7 +43,7 @@ c Open input and output files
       open(11,file='input.level2.txt',status='old',form='formatted')
       open(12,file='output.level2.txt',status='unknown',form='formatted')
       open(13,file='diag.level2.txt',status='unknown',form='formatted')
-      open(10,file='output.level2.table2.csv',status='unknown',form='formatted')
+      open(10,file='input.level2.table2.csv',status='unknown',form='formatted')
 
 c Read input namelist file
 
