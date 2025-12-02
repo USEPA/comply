@@ -1,0 +1,18 @@
+Project name       |Test Project
+Company name       |Vandalay Industries
+Facility name      |Reactor A
+Facility address   |100 Main Street
+Contact person     |Contact Person
+Contact phone #    |919-000-0000
+Number of stacks   |1
+Latitude (degrees) |37.5407
+Longitude(degrees) |-77.4360
+Stack height (m)   |25.
+Building height(m) |20.
+Building width(m)  |50.
+Distance to src(m) |200.
+Avg wind speed(m/s)|3.0
+Number of nuclides |3
+Name,Emission(Ci/s)|I-131,3.2E-10
+Name,Emission(Ci/s)|SE-75,1.6E-09
+Name,Emission(Ci/s)|SR-85,9.4E-09

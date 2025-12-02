@@ -1,0 +1,16 @@
+Project:Test Project                                                                                                                                                                                            
+Company:Vandalay Industries                                                                                                                                                                                     
+Facility:Reactor A                                                                                                                                                                                               
+Address:100 Main Street                                                                                                                                                                                         
+Point of Contact:Contact Person                                                                                                                                                                                          
+Phone Number:919-000-0000                                                                                                                                                                                            
+Latitude (degrees):  37.54070
+Longitude (degrees): -77.43600
+Number of radionuclides: 3
+I-131   ,G,   0.00200000009499490261,   0.29850748181343078613
+SE-75   ,G,   0.00200000009499490261,   1.81818187236785888672
+SR-85   ,L,   3.50000000000000000000,   1.84210526943206787109
+Total possession fraction:      3.96
+Total possession fraction iodine only:      0.30
+ 
+Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM):12/ 1/2025 12:51
