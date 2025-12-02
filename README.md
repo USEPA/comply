@@ -14,3 +14,6 @@ COMPLY calculates the effective dose equivalent (ede) from radionuclides release
 The COMPLY computer software includes four increasing levels of complexity. A user can demonstrate compliance at any level. Level 1 requests the least amount of information: emission concentration or quantity possessed. However, under Level 1, "worst case" assumptions are used in the dose estimate. Level 4 requests the most information and uses site specific data instead of assuming the worst. The values estimated by this screening model are strictly for comparison with environmental standards and are not intended to represent actual doses to real people.
 
 Use of COMPLY is not appropriate for estimating doses from sources that do not originate from an exhaust stack or vent.
+
+Check out the [US EPA COMPLY website](https://www.epa.gov/radiation/comply) for more information.
+
