@@ -15,5 +15,7 @@ The COMPLY computer software includes four increasing levels of complexity. A us
 
 Use of COMPLY is not appropriate for estimating doses from sources that do not originate from an exhaust stack or vent.
 
-Check out the [US EPA COMPLY website](https://www.epa.gov/radiation/comply) for more information.
+***
+
+Go to the [US EPA COMPLY website](https://www.epa.gov/radiation/comply) for more information.
 
