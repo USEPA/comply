@@ -1,5 +1,7 @@
 # Fortran version of COMPLY code
 
+***
+
 ### Compiling code on Linux system
 
 Instructions for compiling "Level 1" on a linux system:
@@ -13,6 +15,8 @@ Instructions for compiling "Level 2" on a linux system:
 ```
 make -f makefile2
 ```
+
+***
 
 ### Code application on Linux system 
 
