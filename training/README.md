@@ -1,7 +1,7 @@
 
 ## Useful links for more information
 * Watch [What is Git?  Explained in 2 minutes]( https://www.youtube.com/watch?v=2ReR1YJrNOM)
-* * Watch [Git Tutorial for Beginners:  Learn Git in 1 hour](https://www.youtube.com/watch?v=8JJ101D3knE) (Teaches git using command line and VSCode.)
+* Watch [Git Tutorial for Beginners:  Learn Git in 1 hour](https://www.youtube.com/watch?v=8JJ101D3knE) (Teaches git using command line and VSCode.)
 
 ****
 
