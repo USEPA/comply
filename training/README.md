@@ -3,6 +3,9 @@
 * Watch [What is Git?  Explained in 2 minutes]( https://www.youtube.com/watch?v=2ReR1YJrNOM)
 * Watch [Git Tutorial for Beginners:  Learn Git in 1 hour](https://www.youtube.com/watch?v=8JJ101D3knE) (Teaches git using command line and VSCode.)
 
+* [ Read 'Proposing changes to your work with pull requests' ](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
+* [Read 'Helping others review your changes'](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/helping-others-review-your-changes)
+  
 ****
 
 ## GitHub Vocabulary
