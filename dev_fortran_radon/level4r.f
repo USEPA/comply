@@ -1,4 +1,4 @@
-      PROGRAM COMPLY
+      PROGRAM COMPLYR
 
       IMPLICIT NONE
 c Declare dynamic arrays
