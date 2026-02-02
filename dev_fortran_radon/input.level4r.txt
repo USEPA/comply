@@ -5,6 +5,7 @@ Facility address   |Western Colorado
 Contact person     |None
 Contact phone #    |800-123-4567
 Number of stacks   |2
+====================
 Latitude (degrees) |39.1
 Longitude(degrees) |-109.0
 Stack height (m)   |1.
@@ -40,6 +41,7 @@ Dir,Freq,Speed(m/s)|W  ,0.036,4.01,20000.,E
 Dir,Freq,Speed(m/s)|WNW,0.038,5.54,20000.,ESE
 Dir,Freq,Speed(m/s)|NW ,0.044,5.03,20000.,SE
 Dir,Freq,Speed(m/s)|NNW,0.021,4.69,20000.,SSE
+====================
 Latitude (degrees) |39.1
 Longitude(degrees) |-109.0
 Stack height (m)   |2.
