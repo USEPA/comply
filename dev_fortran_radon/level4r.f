@@ -235,25 +235,6 @@ c Read input namelist file
 
        ENDIF !end condition where H > 0
 
-! Subroutine MAXP finds XMAX (point of maximum ground-level concentration) and PMAX (the maximum value of P).
-!     XMAX = 0.0
-!      IF ( HEFF .GT. 0.0 ) THEN
-!        CALL MAXP( HEFF, PMAX, XMAX )
-!      ENDIF
-
-!   If XX < XMAX, then the maximum value of P is used. (See Figure 3 of NCRP)
-!      IF ( XX .LT. XMAX ) THEN
-!        P = PMAX
-!      ELSE
-!        P = PP( XX, HEFF, 0.0 )
-!      ENDIF
-
-! Section A.3.1, Equation A-6
-!      C = F * Q * P / U
-
-!Section A.3.1, Equation A-6 (except Q, done in LEVEL4WR)
-!      C = FF * P / UU
-
 
 ! Calculate pp
        SIGMAZ = (0.06 * dist) / SQRT( 1.0 + 0.0015 * dist)
