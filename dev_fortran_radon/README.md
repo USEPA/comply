@@ -1,4 +1,4 @@
-# Fortran version of COMPLY code
+# Fortran version of COMPLY-r code
 
 ***
 
