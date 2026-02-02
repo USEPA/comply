@@ -1,0 +1,41 @@
+Project:Users Guide Example                                                                                                                                                                                     
+Company:Fake Mine                                                                                                                                                                                               
+Facility:Fake Mine                                                                                                                                                                                               
+Address:Western Colorado                                                                                                                                                                                        
+Point of Contact:None                                                                                                                                                                                                    
+Phone Number:800-123-4567                                                                                                                                                                                            
+-----------------------------------------------------------------------
+Stack number:  1
+Latitude (degrees):  39.10000
+Longitude (degrees):-109.00000
+Release height (m):       1.0
+Stack diameter (m):       1.5
+Exit velocity (m3/s):      35.0
+Stack temperature (F):      57.0
+Air temperature (F):      54.0
+Vertial momentum (YES/NO):NO 
+Distance from source to receptor (m):   15000.0
+Assumed wind speed (m/s) when no wind rose provided:       3.0
+Emission rate (Ci/s):   0.00006340000000000000
+Effective dose equivalent (mrem/yr):   0.01701118797063827515
+-----------------------------------------------------------------------
+Stack number:  2
+Latitude (degrees):  39.10000
+Longitude (degrees):-109.00000
+Release height (m):       2.0
+Stack diameter (m):       2.5
+Exit velocity (m3/s):      40.0
+Stack temperature (F):      55.0
+Air temperature (F):      54.0
+Vertial momentum (YES/NO):YES
+Distance from source to receptor (m):   15000.0
+Assumed wind speed (m/s) when no wind rose provided:       3.0
+Emission rate (Ci/s):   0.00016000000000000001
+Effective dose equivalent (mrem/yr):   0.04293044283986091614
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+Total effective dose equivalent all stacks (mrem/yr):      1.65
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+ 
+Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM): 2/ 2/2026  9:20
