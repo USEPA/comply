@@ -115,6 +115,7 @@ c Read input namelist file
 
        do n = 1, nstacks 
 
+       read(11,'(a)') !blank spacer to improve readability of the input file
        read(11,'(20x,f10.5)') latitude(n)
        read(11,'(20x,f10.5)') longitude(n)
        read(11,'(20x,f10.5)') releaseht(n)
