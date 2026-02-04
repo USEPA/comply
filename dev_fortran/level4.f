@@ -128,7 +128,7 @@ c Declare dynamic arrays
       open(13,file='diag.level4.txt',status='unknown',form='formatted')
 
       open(9,file='comply171_original_input_data.csv',status='old',form='formatted')
-      open(10,file='output.level4.tree.csv',status='old',form='formatted')
+      open(10,file='input.decaychain.csv',status='old',form='formatted')
 
 c Read input namelist file
 
@@ -823,4 +823,5 @@ c Formatting for output file
 ! End of program
 
       END 
+
 
