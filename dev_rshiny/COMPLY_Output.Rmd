@@ -1,0 +1,17 @@
+---
+title: "COMPLY_Output"
+author: "M.MacDonald"
+date: "2026-02-04"
+output: html_document
+params:
+  report_data: NA
+  report_plot: NA
+---
+
+### Interactive Visualization
+```{r, echo=FALSE}
+# Simply printing the plotly object embeds it in HTML
+params$report_plot
+# DT creates a sortable, searchable table in the HTML file
+DT::datatable(params$report_data)
+```
