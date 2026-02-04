@@ -1,0 +1,43 @@
+Project name       |Users Guide Example
+Company name       |Fake Mine
+Facility name      |Fake Mine
+Facility address   |Western Colorado
+Contact person     |None
+Contact phone #    |800-123-4567
+Number of stacks   |1
+====================
+Latitude (degrees) |39.1
+Longitude(degrees) |-109.0
+Stack height (m)   |1.0
+Exit velocity(m3/s)|100.
+Diameter (m)       |1.0
+Stack temp (F)     |55.
+Air temp (F)       |55.
+Vertical momentum  |YES
+Distance to src(m) |4500.
+Src location sector|S
+Avg wind speed(m/s)|2.0
+Number of nuclides |1
+Emission rate      |3.17098E-06
+Source of wind data|NCDC
+Dates of coverage  |1988 to 1989
+Wind data location |Grand Junction
+Distance to source |40 miles
+Percent calm winds |0.00
+Number of wdir bins|16
+Dir,Freq,Speed(m/s)|N  ,0.250,2.00,4500.,S
+Dir,Freq,Speed(m/s)|NNE,0.050,2.00,6000.,SSW
+Dir,Freq,Speed(m/s)|NE ,0.050,2.00,6000.,SW
+Dir,Freq,Speed(m/s)|ENE,0.050,2.00,6000.,WSW
+Dir,Freq,Speed(m/s)|E  ,0.050,2.00,6000.,W
+Dir,Freq,Speed(m/s)|ESE,0.050,2.00,6000.,WNW
+Dir,Freq,Speed(m/s)|SE ,0.050,2.00,6000.,NW
+Dir,Freq,Speed(m/s)|SSE,0.050,2.00,6000.,NNW
+Dir,Freq,Speed(m/s)|S  ,0.050,2.00,6000.,N
+Dir,Freq,Speed(m/s)|SSW,0.050,2.00,6000.,NNE
+Dir,Freq,Speed(m/s)|SW ,0.050,2.00,6000.,NE
+Dir,Freq,Speed(m/s)|WSW,0.050,2.00,6000.,ENE
+Dir,Freq,Speed(m/s)|W  ,0.050,2.00,6000.,E
+Dir,Freq,Speed(m/s)|WNW,0.050,2.00,6000.,ESE
+Dir,Freq,Speed(m/s)|NW ,0.050,2.00,6000.,SE
+Dir,Freq,Speed(m/s)|NNW,0.050,2.00,6000.,SSE
