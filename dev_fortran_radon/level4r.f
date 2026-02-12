@@ -80,9 +80,6 @@ c Declare dynamic arrays
       open(12,file='output.level4r.txt',status='unknown',form='formatted')
       open(13,file='diag.level4r.txt',status='unknown',form='formatted')
 
-!      open(9,file='comply171_original_input_data.csv',status='old',form='formatted')
-!      open(10,file='output.level4.tree.csv',status='old',form='formatted')
-
 c Read input namelist file
 
        read(11,'(20x,a)') title
@@ -190,7 +187,7 @@ c Read input namelist file
 
        do j = 1, nwindbins(n)
 
-       do receptor = 100, 40000, 100
+       do receptor = 50, 40000, 10
 
        dist = float(receptor)
 
@@ -215,8 +212,6 @@ c Read input namelist file
         TERM1  = 75.0 * FM / ( ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) ) ** 2.0 )
         TERM2  = releaseht(n) + 7.79 * SQRT( FM ) / ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) ) !is this stack height or HEFF??
 
-!!        write(*,*)'YY! ',verticalmomentum(n),diameter(n),TERM1,TERM2,R,FM,AREA,STKVEL
-
 ! If the site has a vertical stack, then the momentum rise value is zero, otherwise compute the value.
         IF ( verticalmomentum(n).eq.'YES' ) THEN
          DELHMO = 0.93 * ( TERM1 ** ( 3.0 / 7.0 ) ) *
@@ -232,12 +227,11 @@ c Read input namelist file
 
 ! Use maximum of buoyant or momentum rise
        HEFF = releaseht(n) + AMAX1( DELHMO, DELHBU )
-!!       write(*,*)'WW',releaseht(n),HEFF,DELHMO, DELHBU
 
        ENDIF !end condition where H > 0
 
 
-! Calculate pp
+! Calculate p
        SIGMAZ = (0.06 * dist) / SQRT( 1.0 + 0.0015 * dist)
        !CAPSIG = SQRT( SIGMAZ ** 2 + area / 3.14159265 ) 
        CAPSIG = SQRT( SIGMAZ ** 2 + 0.0 / 3.14159265 ) !area seems to be set to 0. in complyr
@@ -326,14 +320,14 @@ c Read input namelist file
 
        write(*,*)'Stack ',n,' max dose (',maxdose,') receptor at ',windbinsrdist(n,maxsect),sectorname(n,maxsect)
        write(*,*)
-       write(*,2999)'Inhalation dose is',inhalation,' from stack',n
+       write(*,2999)'Inhalation dose is ',inhalation,' from stack',n
        write(*,*)'--------------------------------------------------------------------------' 
        enddo !end loop over radionuclides (m)
 
        enddo !end loop over stacks (n)
 
        write(*,*)
-       write(*,4000)'Total dose (mrem/yr):',alldose
+       write(*,3500)'Total dose (mrem/yr):',alldose
        write(*,*)'Total dose limit is 10.0 mrem/yr'
        write(*,*)
 
@@ -342,10 +336,12 @@ c Read input namelist file
  2999  FORMAT(a,f20.15,a,i3)
  3000  FORMAT(i2,',',f6.1,',',f30.20,6(',',f20.10))
  3001  FORMAT('STACK,RADNAME,DISTANCE,CONC,IMMERSION,INHALATION,SURFACE,MEAT,MILK,VEG')
- 4000  FORMAT(a,f10.4)
+ 3500  FORMAT(a,f10.4)
 
 c Write stardardized output
 
+       write(12,4000)
+       write(12,2001)
        write(12,1000) title
        write(12,1001) company
        write(12,1002) facility 
@@ -353,8 +349,8 @@ c Write stardardized output
        write(12,1004) poc
        write(12,1005) phone
 
-       write(12,2001)
        do n = 1, nstacks
+       write(12,2001)
        write(12,1006) n
        write(12,1007) latitude(n)
        write(12,1008) longitude(n)
@@ -368,13 +364,13 @@ c Write stardardized output
        write(12,1016) windspeed(n)
        write(12,1017) rademis(n,1)
        write(12,1018) totihdose(n,1)
-       write(12,2001)
        enddo !end loop over stacks
 
        write(12,2001)
        write(12,2000) alldose
        write(12,2001)
        write(12,2001)
+       write(12,4000)
 
 c Add time stamp of model simulation to output file
 
@@ -422,6 +418,8 @@ c Formatting for output file
  2000 FORMAT('Total effective dose equivalent all stacks (mrem/yr):',f10.2)
  2001 FORMAT('-----------------------------------------------------------------------')
  2100 FORMAT('Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
+
+ 4000 FORMAT('COMPLY-r version 2.0 distributed through GitHub')
 
 ! End of program
 
