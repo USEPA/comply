@@ -13,6 +13,7 @@ c Declare dynamic arrays
       REAL*4, ALLOCATABLE :: latitude(:)            !latitude (decimal degrees)
       REAL*4, ALLOCATABLE :: longitude(:)           !longitude (decimal degrees)
       REAL*4, ALLOCATABLE :: pctcalm(:)             !percentage of calm days at wind data location
+      REAL*4, ALLOCATABLE :: inhalation(:)          !inhalation dose (mrem/yr)
 
       REAL*8, ALLOCATABLE :: rademis(:,:)           !radionuclide emissions (Ci/s) for each stack
       REAL*8, ALLOCATABLE :: conc(:,:)              !radionuclide air concentration (Bq/m3)
@@ -54,7 +55,6 @@ c Declare dynamic arrays
       REAL wetdepadj,wetdepadjbad                                !wet deposition adjustment factor
       REAL xtime
       REAL xremove
-      REAL ingestion, immersion, inhalation, surface
       REAL RHOAIR,RHOSTK,STKVEL,R,FM,DELHMO,DELHBU,HEFF,FB,zz,INHFAC,TINIT,T,EQILOUT,EQILIN,INHDOS,FINDOOR
 
       INTEGER nstacks                               !number of unique stacks
@@ -109,6 +109,7 @@ c Read input namelist file
        allocate(winddist(nstacks))
        allocate(pctcalm(nstacks))
        allocate(nwindbins(nstacks))
+       allocate(inhalation(nstacks))
 
        do n = 1, nstacks 
 
@@ -178,12 +179,7 @@ c Read input namelist file
        do m = 1, nrads(n)
 
        maxdose = 0.0
-       inhalation = 0.
-       immersion = 0.
-       ingestion = 0.
-       totmilkdose = 0.
-       totvegdose = 0.
-       totmeatdose = 0.
+       inhalation(n) = 0.
 
        do j = 1, nwindbins(n)
 
@@ -307,7 +303,7 @@ c Read input namelist file
             maxdose = tempdose
             maxsect = j
             maxdist = dist
-            inhalation = totihdose(n,m)
+            inhalation(n) = totihdose(n,m)
         endif
        endif
 
@@ -316,11 +312,11 @@ c Read input namelist file
        enddo !end loop over distances between source and receptor (receptor)
        enddo !end loop over number of wind direction bins (j)
 
-       alldose = alldose + inhalation
+       alldose = alldose + inhalation(n)
 
        write(*,*)'Stack ',n,' max dose (',maxdose,') receptor at ',windbinsrdist(n,maxsect),sectorname(n,maxsect)
        write(*,*)
-       write(*,2999)'Inhalation dose is ',inhalation,' from stack',n
+       write(*,2999)'Inhalation dose is ',inhalation(n),' from stack',n
        write(*,*)'--------------------------------------------------------------------------' 
        enddo !end loop over radionuclides (m)
 
@@ -363,7 +359,7 @@ c Write stardardized output
        write(12,1015) distance(n)
        write(12,1016) windspeed(n)
        write(12,1017) rademis(n,1)
-       write(12,1018) totihdose(n,1)
+       write(12,1018) inhalation(n)
        enddo !end loop over stacks
 
        write(12,2001)
@@ -415,7 +411,7 @@ c Formatting for output file
  1016 FORMAT('Assumed wind speed (m/s) when no wind rose provided:',f10.1)
  1017 FORMAT('Emission rate (Ci/s):',f25.20)
  1018 FORMAT('Effective dose equivalent (mrem/yr):',f25.20)
- 2000 FORMAT('Total effective dose equivalent all stacks (mrem/yr):',f10.2)
+ 2000 FORMAT('Total effective dose equivalent all stacks (mrem/yr):',f10.5)
  2001 FORMAT('-----------------------------------------------------------------------')
  2100 FORMAT('Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
 
