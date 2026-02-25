@@ -83,7 +83,7 @@ ui <- page_sidebar(
     h6("Enter Facility Details:"),
     textInput("CompanyName", "Company Name:", ""),
     textInput("CompanyContact", "Company Contact Name:", ""),
-    textInput("CompanyContactNum", "Company Contact Number:", ""),
+    textInput("CompanyContactNum", "Company Contact Email:", ""),
     textInput("FacilityName", "Facility Name:", ""),
     h6("Enter Coordinates or Address:"),
     fluidRow(
@@ -310,14 +310,14 @@ server <- function(input, output, session) {
 
     output$fraction_display <- renderText({
       selected_row <- rad_sum()
-      selected_age <- selected_row$Fraction
+      selected_age <- round(selected_row$Fraction,2)
       # Create the text string using paste0() or paste()
-      paste0("Total possession fraction is ", selected_age, ".")
+      paste0("Stack possession fraction is ", selected_age, " times the allowable amount given in the possession table.")
     })        
     
     output$fraction_display_i <- renderText({
       selected_row <- i_sum()
-      selected_age <- selected_row$Fraction
+      selected_age <- round(selected_row$Fraction,2)
       # Create the text string using paste0() or paste()
       paste0("Total iodine possession fraction is ", selected_age, ".")
     })        
