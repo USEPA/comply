@@ -4,16 +4,20 @@
 c Declare dynamic arrays
 
       REAL*4, ALLOCATABLE :: releaseht(:)           !stack height (m)
+      REAL*4, ALLOCATABLE :: diameter(:)            !stack diameter (m)
+      REAL*4, ALLOCATABLE :: exitvelocity(:)        !exit velocity ()
+      REAL*4, ALLOCATABLE :: airtemp(:)             !air temperature (F)
+      REAL*4, ALLOCATABLE :: stacktemp(:)           !stack temperature (F)
       REAL*4, ALLOCATABLE :: bldheight(:)           !building height (m)
       REAL*4, ALLOCATABLE :: bldwidth(:)            !building width (m)
       REAL*4, ALLOCATABLE :: distance(:)            !distance between stack and receptor (m)
       REAL*4, ALLOCATABLE :: distanceveg(:)         !distance between garden and receptor (m)
       REAL*4, ALLOCATABLE :: distancecow(:)         !distance between cows/milk and receptor (m)
       REAL*4, ALLOCATABLE :: distancemeat(:)        !distance between meat and receptor (m)
-      REAL*4, ALLOCATABLE :: windspeed(:)           !wind speed (m/s)
       REAL*4, ALLOCATABLE :: latitude(:)            !latitude (decimal degrees)
       REAL*4, ALLOCATABLE :: longitude(:)           !longitude (decimal degrees)
       REAL*4, ALLOCATABLE :: pctcalm(:)             !percentage of calm days at wind data location
+      REAL*4, ALLOCATABLE :: rainfall(:)            !rainfall rate (m/yr)
 
       REAL*8, ALLOCATABLE :: rademis(:,:)           !radionuclide emissions (Ci/s) for each stack
       REAL*8, ALLOCATABLE :: conc(:,:)              !radionuclide air concentration (Bq/m3)
@@ -84,6 +88,7 @@ c Declare dynamic arrays
       CHARACTER*3,  ALLOCATABLE :: meatsector(:)    !Sector (wind dir) location of meat
       CHARACTER*8,  ALLOCATABLE :: decaychain(:)    !Decay chain list
       CHARACTER*8,  ALLOCATABLE :: decaychainname(:)!Decay chain radionuclide names
+      CHARACTER*3,  ALLOCATABLE :: verticalmomentum(:)    !vertical momentum (YES or NO)
 
       CHARACTER*200,ALLOCATABLE :: windsource(:)    !Source of wind data
       CHARACTER*200,ALLOCATABLE :: winddates(:)     !Date coverage of wind data
@@ -103,6 +108,7 @@ c Declare dynamic arrays
       REAL xtime
       REAL xremove
       REAL ingestion, immersion, inhalation, surface
+      REAL RHOAIR,RHOSTK,STKVEL,R,FM,DELHMO,DELHBU,HEFF,FB,zz,INHFAC,TINIT,T
 
       INTEGER nstacks                               !number of unique stacks
       INTEGER receptor, N, M, I, J, K, L, II, JJ, P, Q                        !loop counters
@@ -120,7 +126,7 @@ c Declare dynamic arrays
 ! Open input and output files 
 
       write(*,*)
-      write(*,*)'COMPLY v2.0 for internal testing only'
+      write(*,*)'COMPLY v2.0'
       write(*,*)
  
       open(11,file='input.level4.txt',status='old',form='formatted')
@@ -146,6 +152,11 @@ c Read input namelist file
        allocate(releaseht(nstacks))
        allocate(bldheight(nstacks))
        allocate(bldwidth(nstacks))
+       allocate(exitvelocity(nstacks))
+       allocate(diameter(nstacks))
+       allocate(stacktemp(nstacks))
+       allocate(airtemp(nstacks))
+       allocate(verticalmomentum(nstacks))
        allocate(distance(nstacks))
        allocate(distanceveg(nstacks))
        allocate(distancecow(nstacks))
@@ -153,7 +164,6 @@ c Read input namelist file
        allocate(vegsector(nstacks))
        allocate(milksector(nstacks))
        allocate(meatsector(nstacks))
-       allocate(windspeed(nstacks))
        allocate(nrads(nstacks))
        allocate(windsource(nstacks))
        allocate(winddates(nstacks))
@@ -161,15 +171,22 @@ c Read input namelist file
        allocate(winddist(nstacks))
        allocate(pctcalm(nstacks))
        allocate(nwindbins(nstacks))
+       allocate(rainfall(nstacks))
 
 
        do n = 1, nstacks 
 
+       read(11,'(a)') !blank spacer to improve readability of the input file
        read(11,'(20x,f10.5)') latitude(n)
        read(11,'(20x,f10.5)') longitude(n)
        read(11,'(20x,f10.5)') releaseht(n)
        read(11,'(20x,f10.5)') bldheight(n)
        read(11,'(20x,f10.5)') bldwidth(n)
+       read(11,'(20x,f10.5)') exitvelocity(n)
+       read(11,'(20x,f10.5)') diameter(n)
+       read(11,'(20x,f10.5)') stacktemp(n)
+       read(11,'(20x,f10.5)') airtemp(n)
+       read(11,'(20x,a)') verticalmomentum(n)
        read(11,'(20x,f10.5)') distance(n)
        read(11,'(20x,f10.5)') distanceveg(n)
        read(11,'(20x,f10.5)') distancecow(n)
@@ -179,7 +196,7 @@ c Read input namelist file
        read(11,'(20x,a)') milksector(n)
        read(11,'(20x,a)') meatsector(n)
 
-       read(11,'(20x,f10.5)') windspeed(n)
+       read(11,'(20x,f10.5)') rainfall(n)
 
        read(11,'(20x,i3)') nrads(n)
 
@@ -299,13 +316,61 @@ c Read input namelist file
 
        do j = 1, nwindbins(n)
 
-       do receptor = 10, 3010, 5
+       do receptor = 10, 3010, 10
 
        dist = float(receptor)
 
+       if(exitvelocity(n).le.0.) then
+       exitvelocity(n) = 0.3
+       endif
+
+       HEFF = releaseht(n)
+
+       IF ( releaseht(n) .GT. 2.5*bldheight(n) ) THEN
+
+! Temperature
+        RHOAIR = 0.0735 * ( 80.0 + 460.0 ) / ( airtemp(n) + 460.0 )
+        RHOAIR = RHOAIR * 454.0 / ( 0.3048 ** 3 )
+        RHOSTK = RHOAIR * ( airtemp(n) + 460.0 ) / ( stacktemp(n) + 460.0 )
+
+! Momentum
+        AREA   = 3.14 * ( diameter(n) ** 2.0 ) / 4.0
+        STKVEL = exitvelocity(n) / AREA
+        R      = STKVEL / windbinspeed(n,j)
+        FM     = ( RHOSTK / RHOAIR ) * STKVEL * exitvelocity(n) / 3.14
+        TERM1  = 75.0 * FM / ( ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) ) ** 2.0 )
+        TERM2  = releaseht(n) + 7.79 * SQRT( FM ) / ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) ) !is this stack height or HEFF??
+
+! If the site has a vertical stack, then the momentum rise value is zero, otherwise compute the value.
+        IF ( verticalmomentum(n).eq.'YES' ) THEN
+         DELHMO = 0.93 * ( TERM1 ** ( 3.0 / 7.0 ) ) *
+     &        ( TERM2 ** ( 1.0 / 7.0 ) )
+        ELSE
+         DELHMO = 0.0
+        ENDIF
+
+! Buoyant
+        FB = 9.81 * ( RHOAIR - RHOSTK ) * exitvelocity(n) / ( 3.14 * RHOAIR )
+        DELHBU = 23.67 * ( ( FB / ( windbinspeed(n,j) ** 3.0 ) ) ** 0.6 ) *
+     &           ( releaseht(n) + 195.1 * FB / ( windbinspeed(n,j) ** 3.0 ) ) ** 0.4 !stack height or HEFF??
+
+! Use maximum of buoyant or momentum rise
+       HEFF = releaseht(n) + AMAX1( DELHMO, DELHBU )
+!!       write(*,*)'WW',releaseht(n),HEFF,DELHMO, DELHBU
+
+       ENDIF !end condition where H > 0
+
+
        SIGMAZ = (0.06 * dist) / SQRT( 1.0 + 0.0015 * dist)
-       CAPSIG = SQRT( SIGMAZ ** 2 + area / 3.14159265 )
-       pp = 2.032 / ( dist * CAPSIG )
+       CAPSIG = SQRT( SIGMAZ ** 2 + area / 3.14 )
+       zz = 0.5 * ( ( HEFF / CAPSIG ) ** 2 )
+        if(zz.gt.0.001.and.releaseht(n).gt.2.5*bldheight(n)) then
+        pp = 2.032 * EXP( -zz ) / ( dist * CAPSIG )
+        else
+        pp = 2.032 / ( dist * CAPSIG )
+        endif
+
+
        transittime = (dist / windbinspeed(n,j))*(1./3600.)*(1./24.) ! seconds to days
        fdux = (windbinfreq(n,j)/(1.0-pctcalm(n))) / (windbinspeed(n,j)*dist) !s/m2 units
 
@@ -326,8 +391,8 @@ c Read input namelist file
        !emissions should be in Ci/s
        !concentration should be in Ci/m3
        !dry dep velocity in m/day
-       wetdepadj = (8.0 * fdux * 1.0 * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m) )
-       wetdepadjbad = (8.0 * fdux * 1.0 * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m)/rademis(n,m) )
+       wetdepadj = (8.0 * fdux * rainfall(n) * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m) )
+       wetdepadjbad = (8.0 * fdux * rainfall(n) * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m)/rademis(n,m) )
        !!! error in comply171       wetdepadj = (8.0 * fdux * 1.0 * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m)/rademis(n,m) )
 
 !       if(dist.eq.240) then
@@ -348,6 +413,7 @@ c Read input namelist file
 !          write(*,*)'Decay chain:', NUC,k,(decaychain(l),l=1,k)
           do jj = 1, 826
           read(9,'(a)') inline
+!          write(*,*) inline
           read(inline,*) NUC,FACTOR,FACTORB,FACTORC,FACTORD,FACTORE,FACTORF,FACTORG,
      &      FACTORH,FACTORI,FACTORJ,FACTORK,FACTORL,FACTORM,FACTORN
            do l = 1, k
@@ -382,7 +448,7 @@ c Read input namelist file
 !          do l = 1, k
 !          write(*,*)'Decay chain:', k,decaychainname(l),halflife(l),wbfac(l),inhalationfac(l),immersionfac(l),surfacefac(l),
 !     &      ingestionfac(l),drydepvel(l)
-!            write(*,*) 'Decay chain:',decaychainname(l),xbveg(l),xbfor(l),xfmilk(l),xfmeat(l)
+!!            write(*,*) 'Decay chain:',decaychainname(l),xbveg(l),xbfor(l),xfmilk(l),xfmeat(l)
 !          enddo
 !          endif
 
@@ -705,7 +771,7 @@ c Read input namelist file
         endif
        endif
 
-       write(13,3000) n,radname(n,m),dist,
+       write(13,3000) n,radname(n,m),sectorname(n,j),dist,
      &     conc(n,m),totimdose(n,m),totihdose(n,m),totsurfdose(n,m),
      &     meatdose(n,m),milkdose(n,m),vegdose(n,m)
 
@@ -727,7 +793,7 @@ c Read input namelist file
        enddo !end loop over radionuclides (m)
 
        write(*,*)
-       write(*,4000)'Total dose (mrem/yr):',alldose
+       write(*,3100)'Total dose (mrem/yr):',alldose
        write(*,*)'Total dose limit is 10.0 mrem/yr'
        write(*,*)'Iodine limit is 3.0 mrem/yr'
        write(*,*)
@@ -735,11 +801,14 @@ c Read input namelist file
        enddo !end loop over stacks (n)
 
  2999  FORMAT(a30,a10,f20.15)
- 3000  FORMAT(i2,',',a,',',f6.1,',',f30.20,6(',',f20.10))
- 3001  FORMAT('STACK,RADNAME,DISTANCE,CONC,IMMERSION,INHALATION,SURFACE,MEAT,MILK,VEG')
- 4000  FORMAT(a,f10.4)
+ 3000  FORMAT(i2,',',a,',',a,',',f6.1,',',f30.20,6(',',f20.10))
+ 3001  FORMAT('STACK,RADNAME,SECTOR,DISTANCE,CONC,IMMERSION,INHALATION,SURFACE,MEAT,MILK,VEG')
+ 3100  FORMAT(a,f10.4)
 
 c Write stardardized output
+
+       write(12,4000)
+       write(12,2001)
 
        write(12,1000) title
        write(12,1001) company
@@ -749,25 +818,42 @@ c Write stardardized output
        write(12,1005) phone
 
        do n = 1, nstacks
-       write(12,1006) latitude(n)
-       write(12,1007) longitude(n)
-       write(12,1008) releaseht(n)
-       write(12,1009) bldheight(n)
-       write(12,1010) bldwidth(n)
-       write(12,1011) distance(n)
-       write(12,1012) windspeed(n)
+       write(12,2001)
+       write(12,1006) n
+       write(12,1007) latitude(n)
+       write(12,1008) longitude(n)
+       write(12,1009) releaseht(n)
+       write(12,1010) diameter(n)
+       write(12,1011) exitvelocity(n)
+       write(12,1012) stacktemp(n)
+       write(12,1013) airtemp(n)
+       write(12,1014) verticalmomentum(n)
+       write(12,1015) bldheight(n)
+       write(12,1016) bldwidth(n)
+       write(12,1017) distance(n)
+       write(12,1018) rainfall(n)
+       write(12,1019) nrads(n)
 
-       write(12,1013) nrads(n)
+       write(12,2002)
+       write(12,1800)'Max dose receptor ',windbinsrdist(n,maxsect),' m downwind in sector ',sectorname(n,maxsect)
+ 1800  FORMAT(a,f5.0,a,a)
+       write(12,2002)
 
+       write(12,1998)
        do m=1, nrads(n)
-       write(12,1014) radname(n,m),rademis(n,m),conc(n,m),(dose(n,m)+vegdose(n,m)+meatdose(n,m)),dose(n,m),vegdose(n,m)
-       enddo !end loop over radionuclides
+       write(12,1999) radname(n,m),rademis(n,m),conc(n,m),
+     &     (totimdose(n,m)+totihdose(n,m)+totsurfdose(n,m)+meatdose(n,m)+milkdose(n,m)+vegdose(n,m)),
+     &     totimdose(n,m),totihdose(n,m),totsurfdose(n,m),meatdose(n,m),milkdose(n,m),vegdose(n,m)
 
+       enddo !end loop over radionuclides
        enddo !end loop over stacks
 
-       write(12,2000) alldose
-       write(12,2002) totvegdose/alldose
-       write(12,2004) totmilkdose/alldose
+       write(12,2002)
+       write(12,2001)
+       write(12,2001)
+       write(12,2002)
+       write(12,2050) alldose
+       write(12,2002)
 
 
 c Add time stamp of model simulation to output file
@@ -787,7 +873,9 @@ c Add time stamp of model simulation to output file
        print *, 'TIME=',b(2)
        print *, 'ZONE=',b(3)
 
-       write(12,*)
+       write(12,2002)
+       write(12,2001)
+       write(12,2002)
        write(12,2100) date_time(2),date_time(3),date_time(1),
      &           date_time(5),date_time(6)
 
@@ -800,29 +888,32 @@ c Formatting for output file
  1003 FORMAT('Address:',a)
  1004 FORMAT('Point of Contact:',a)
  1005 FORMAT('Phone Number:',a)
- 1006 FORMAT('Latitude (degrees):',f10.5)
- 1007 FORMAT('Longitude (degrees):',f10.5)
- 1008 FORMAT('Release height (m):',f10.1)
- 1009 FORMAT('Building height (m):',f10.1)
- 1010 FORMAT('Building width (m):',f10.1)
- 1011 FORMAT('Distance from source to receptor (m):',f10.1)
- 1012 FORMAT('Assumed wind speed (m/s):',f10.1)
- 1013 FORMAT('Number of radionuclides:',I2)
- 1014 FORMAT(a,',',f25.20,',',f25.20,4(',',f10.6))
- 2000 FORMAT('Total effective dose equivalent (mrem/yr):',f10.2)
- 2001 FORMAT('Total effective dose equivalent iodine only (mrem/yr):',f10.2)
+ 1006 FORMAT('Stack number:',i3)
+ 1007 FORMAT('Latitude (degrees):',f10.5)
+ 1008 FORMAT('Longitude (degrees):',f10.5)
+ 1009 FORMAT('Release height (m):',f10.1)
+ 1010 FORMAT('Stack diameter (m):',f10.1)
+ 1011 FORMAT('Exit velocity (m3/s):',f10.1)
+ 1012 FORMAT('Stack temperature (F):',f10.1)
+ 1013 FORMAT('Air temperature (F):',f10.1)
+ 1014 FORMAT('Vertical momentum (YES/NO):',a)
+ 1015 FORMAT('Building height (m):',f10.1)
+ 1016 FORMAT('Building width (m):',f10.1)
+ 1017 FORMAT('Distance from source to receptor (m):',f10.1)
+ 1018 FORMAT('Rainfall rate (m/yr):',f10.1)
+ 1019 FORMAT('Number of radionuclides:',I2)
 
- 2002 FORMAT('Vegetable fraction of total effective dose equivalent:',f5.2)
- 2003 FORMAT('Vegetable fraction of total effective dose equivalent iodine only:',f5.2)
- 2004 FORMAT('Meat/milk fraction of total effective dose equivalent:',f5.2)
- 2005 FORMAT('Meat/milk fraction of total effective dose equivalent iodine only:',f5.2)
+ 1998 FORMAT('Radionuclide,Emissions,Concentration,Total Dose,Immersion,Inhalation,Surface,Meat,Milk,Vegetable')
+ 1999 FORMAT(a,',',E10.3,',',E10.3,7(',',E10.3))
 
+ 2001 FORMAT('-----------------------------------------------------------------------')
+ 2002 FORMAT(' ')
 
- 2100 FORMAT('Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
+ 2050 FORMAT('Total effective dose equivalent all stacks (mrem/yr):',E10.3)
+ 2100 FORMAT('Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
+ 4000 FORMAT('COMPLY version 2.0 level 4 distributed through GitHub')
 
 ! End of program
 
       END 
-
-
 
