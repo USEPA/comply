@@ -1,60 +1,52 @@
-Project name       |2024 Navy Test Case
-Company name       |Department of the Navy
-Facility name      |PSNS and IMF
-Facility address   |Naval Station Everett WA
-Contact person     |Graham Jones
-Contact phone #    |360-340-2164
+Project name       |Test Project
+Company name       |Vandalay Industries
+Facility name      |Reactor A
+Facility address   |100 Main Street
+Contact person     |Contact Person
+Contact phone #    |919-000-0000
 Number of stacks   |1
-Latitude (degrees) |47.56
-Longitude(degrees) |-122.65
+===================
+Latitude (degrees) |35.887591
+Longitude(degrees) |-78.84179
 Stack height (m)   |0.
 Building height(m) |0.
 Building width(m)  |0.
-Distance to src(m) |575.
-Distance to veg(m) |575.
-Distance to milk(m)|2000.
-Distance to meat(m)|575.
-Veg location sector|NNE
-Milk location secto|NE
-Meat location secto|NNE
-Avg wind speed(m/s)|3.0
-Number of nuclides |17
-Name,Emission(Ci/s)|CO-60,  2.35E-15
-Name,Emission(Ci/s)|C-14,   5.23E-09
-Name,Emission(Ci/s)|H-3,    3.17E-08
-Name,Emission(Ci/s)|KR-83M, 3.49E-10
-Name,Emission(Ci/s)|KR-85,  7.29E-13
-Name,Emission(Ci/s)|KR-85M, 8.56E-10
-Name,Emission(Ci/s)|KR-87,  1.11E-09
-Name,Emission(Ci/s)|KR-88,  1.74E-09
-Name,Emission(Ci/s)|XE-131M,4.76E-11
-Name,Emission(Ci/s)|XE-133M,3.81E-10
-Name,Emission(Ci/s)|XE-133, 9.51E-09
-Name,Emission(Ci/s)|XE-135, 1.05E-08
-Name,Emission(Ci/s)|AR-41,  1.05E-07
-Name,Emission(Ci/s)|I-131,  1.59E-13
-Name,Emission(Ci/s)|I-132,  1.71E-13
-Name,Emission(Ci/s)|I-133,  4.44E-13
-Name,Emission(Ci/s)|I-135,  3.08E-13
+Exit velocity(m3/s)|0.
+Stack diameter(m)  |0.
+Stack temp(F)      |55.
+Air temp(F)        |55.
+Vertical momentum  |NO
+Distance to src(m) |210.
+Distance to veg(m) |210.
+Distance to milk(m)|2500.
+Distance to meat(m)|2000.
+Veg location sector|ENE
+Milk location secto|ENE
+Meat location secto|ENE
+Rainfall (m/yr)    |1.0
+Number of nuclides |3
+Name,Emission(Ci/s)|I-131,3.2E-10
+Name,Emission(Ci/s)|SE-75,1.6E-09
+Name,Emission(Ci/s)|SR-85,9.4E-09
 Source of wind data|NCDC
-Dates of coverage  |2024 (Jan through Dec)
-Wind data location |NBK Bremerton ECC NARAC Tower
-Distance to source |0 miles
-Percent calm winds |0.11
+Dates of coverage  |1975-1980
+Wind data location |Richmond VA
+Distance to source |15 miles
+Percent calm winds |0.12
 Number of wdir bins|16
-Dir,Freq,Speed(m/s)|N  ,0.058,3.14,1850.,S
-Dir,Freq,Speed(m/s)|NNE,0.036,3.02,1900.,SSW
-Dir,Freq,Speed(m/s)|NE ,0.027,2.74,2200.,SW
-Dir,Freq,Speed(m/s)|ENE,0.046,3.01, 750.,WSW
-Dir,Freq,Speed(m/s)|E  ,0.034,2.67, 575.,W
-Dir,Freq,Speed(m/s)|ESE,0.024,2.29, 500.,WNW
-Dir,Freq,Speed(m/s)|SE ,0.016,2.60, 550.,NW
-Dir,Freq,Speed(m/s)|SSE,0.030,3.47, 700.,NNW
-Dir,Freq,Speed(m/s)|S  ,0.110,4.88, 750.,N
-Dir,Freq,Speed(m/s)|SSW,0.203,5.39, 575.,NNE
-Dir,Freq,Speed(m/s)|SW ,0.155,4.93, 725.,NE
-Dir,Freq,Speed(m/s)|WSW,0.034,2.75,2000.,ENE
-Dir,Freq,Speed(m/s)|W  ,0.011,2.10,3350.,E
-Dir,Freq,Speed(m/s)|WNW,0.010,2.32,2200.,ESE
-Dir,Freq,Speed(m/s)|NW ,0.027,3.20,1700.,SE
-Dir,Freq,Speed(m/s)|NNW,0.072,3.19,1600.,SSE
+Dir,Freq,Speed(m/s)|N  ,0.053,4.10,200.,S
+Dir,Freq,Speed(m/s)|NNE,0.029,3.90,225.,SSW
+Dir,Freq,Speed(m/s)|NE ,0.029,3.80,230.,SW
+Dir,Freq,Speed(m/s)|ENE,0.033,3.90,210.,WSW
+Dir,Freq,Speed(m/s)|E  ,0.041,3.90,220.,W
+Dir,Freq,Speed(m/s)|ESE,0.039,4.20,220.,WNW
+Dir,Freq,Speed(m/s)|SE ,0.041,3.90,230.,NW
+Dir,Freq,Speed(m/s)|SSE,0.033,3.90,250.,NNW
+Dir,Freq,Speed(m/s)|S  ,0.051,4.00,240.,N
+Dir,Freq,Speed(m/s)|SSW,0.049,4.50,270.,NNE
+Dir,Freq,Speed(m/s)|SW ,0.086,4.90,230.,NE
+Dir,Freq,Speed(m/s)|WSW,0.118,5.40,240.,ENE
+Dir,Freq,Speed(m/s)|W  ,0.104,5.40,280.,E
+Dir,Freq,Speed(m/s)|WNW,0.073,5.40,220.,ESE
+Dir,Freq,Speed(m/s)|NW ,0.059,4.90,220.,SE
+Dir,Freq,Speed(m/s)|NNW,0.043,4.50,210.,SSE

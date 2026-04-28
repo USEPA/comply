@@ -5,6 +5,7 @@ Facility address   |100 Main Street
 Contact person     |Contact Person
 Contact phone #    |919-000-0000
 Number of stacks   |1
+===================
 Latitude (degrees) |37.5407
 Longitude(degrees) |-77.4360
 Number of radionucs|3

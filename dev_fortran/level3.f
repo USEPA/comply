@@ -333,7 +333,9 @@ c Write stardardized output
        write(12,1019) radname(n,m)
        write(12,1020) rademis(n,m)
        write(12,1021) (dose(n,m)+vegdose(n,m)+cowdose(n,m))
-       write(12,1022) dose(n,m),vegdose(n,m),cowdose(n,m)
+       write(12,1022) dose(n,m)
+       write(12,1023) vegdose(n,m)
+       write(12,1024) cowdose(n,m)
        enddo
        enddo !end loop over stacks
 
@@ -389,7 +391,7 @@ c Formatting for output file
  1011 FORMAT('Exit velocity (m3/s):',f10.1)
  1012 FORMAT('Stack temperature (F):',f10.1)
  1013 FORMAT('Air temperature (F):',f10.1)
- 1014 FORMAT('Vertial momentum (YES/NO):',a)
+ 1014 FORMAT('Vertical momentum (YES/NO):',a)
  1015 FORMAT('Distance from source to receptor (m):',f10.1)
  1016 FORMAT('Distance from source to vegetable receptor (m):',f10.1)
  1017 FORMAT('Distance from source to meat/milk receptor (m):',f10.1)
@@ -397,8 +399,9 @@ c Formatting for output file
  1019 FORMAT('Radionuclide:',a10)
  1020 FORMAT('Emission rate (Ci/s):',f25.20)
  1021 FORMAT('Effective dose equivalent all pathways (mrem/yr):',f25.20)
- 1022 FORMAT('Effective dose equivalent (mrem/yr):',f25.20,f25.20,f25.20)
-
+ 1022 FORMAT('Effective dose equivalent non-ingestion (mrem/yr):',f25.20)
+ 1023 FORMAT('Effective dose equivalent vegetables (mrem/yr):',f25.20)
+ 1024 FORMAT('Effective dose equivalent meat/milk (mrem/yr):',f25.20)
 
  2000 FORMAT('Total effective dose equivalent all stacks (mrem/yr):',f10.2)
  2001 FORMAT('-----------------------------------------------------------------------')
@@ -408,7 +411,7 @@ c Formatting for output file
  2007 FORMAT('All other pathway fraction of total effective dose equivalent:',f5.2)
 
 
- 2100 FORMAT('Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
+ 2100 FORMAT('Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
 
  3000 FORMAT(i2,',',a,',',f6.1,8(',',f25.20))
  3001 FORMAT('STACK,RADNAME,DISTANCE,CONC,WBDOSE,VEGDOSE,COWDOSE,ALTCONC,ALTWB,ALTVEG,ALTCOW')

@@ -32,7 +32,7 @@ c Declare other variables and calculated terms
 c Open input and output files 
 
       write(*,*)
-      write(*,*)'COMPLY v2.0 for internal testing only'
+      write(*,*)'COMPLY v2.0'
       write(*,*)
  
       open(11,file='input.level1.txt',status='old',form='formatted')
@@ -56,6 +56,7 @@ c Read input namelist file
 
        do n = 1, nstacks 
 
+       read(11,'(a)') !blank spacer to improve readability of the input file
        read(11,'(20x,f10.5)') latitude(n)
        read(11,'(20x,f10.5)') longitude(n)
 
@@ -151,6 +152,9 @@ c Write stardardized output
        write(12,1007) longitude(n)
 
        write(12,1013) nrads(n)
+ 
+       write(12,2002)
+       write(12,2003)
 
        do m=1, nrads(n)
        write(12,1014) radname(n,m),radtype(n,m),rademis(n,m),fract(n,m)
@@ -203,7 +207,8 @@ c Formatting for output file
  2000 FORMAT('Total possession fraction:',f10.2)
  2001 FORMAT('-----------------------------------------------------------------------')
  2002 FORMAT(' ')
- 2100 FORMAT('Date/Time (LST) stamp of simulation (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
+ 2003 FORMAT('Radionuclide, Phase, Amount, Possession Fraction')
+ 2100 FORMAT('Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
  4000 FORMAT('COMPLY version 2.0 level 1 distributed through GitHub')
 
 c End of program
