@@ -1,11 +1,32 @@
       PROGRAM COMPLY
 
       IMPLICIT NONE
-c Declare dynamic arrays
+
+c ============================================================================
+c COMPLY v2.0 - LEVEL 4 RADIONUCLIDE DOSE ASSESSMENT MODEL
+c ============================================================================
+c This program models atmospheric dispersion and radiological dose 
+c calculations for radionuclide emissions from stack sources. It computes 
+c air concentrations, environmental transfer, and resulting human doses 
+c via multiple pathways (inhalation, immersion, ingestion, surface deposition).
+c
+c Key features:
+c   - Gaussian plume dispersion model with buoyancy/momentum rise corrections
+c   - Radioactive decay chain calculations for parent/progeny nuclides
+c   - Multiple dose pathways: inhalation, immersion, surface, ingestion
+c   - Ingestion via vegetables, milk, and meat
+c   - Sector-based wind direction analysis
+c ============================================================================
+
+c ============================================================================
+c SECTION 1: DYNAMIC ARRAY DECLARATIONS - METEOROLOGICAL & STACK PARAMETERS
+c ============================================================================
+c These arrays store input parameters for each stack source and associated
+c meteorological/geographic data
 
       REAL*4, ALLOCATABLE :: releaseht(:)           !stack height (m)
       REAL*4, ALLOCATABLE :: diameter(:)            !stack diameter (m)
-      REAL*4, ALLOCATABLE :: exitvelocity(:)        !exit velocity ()
+      REAL*4, ALLOCATABLE :: exitvelocity(:)        !exit velocity (m/s)
       REAL*4, ALLOCATABLE :: airtemp(:)             !air temperature (F)
       REAL*4, ALLOCATABLE :: stacktemp(:)           !stack temperature (F)
       REAL*4, ALLOCATABLE :: bldheight(:)           !building height (m)
@@ -19,63 +40,116 @@ c Declare dynamic arrays
       REAL*4, ALLOCATABLE :: pctcalm(:)             !percentage of calm days at wind data location
       REAL*4, ALLOCATABLE :: rainfall(:)            !rainfall rate (m/yr)
 
+c ============================================================================
+c SECTION 2: DYNAMIC ARRAY DECLARATIONS - EMISSION & CONCENTRATION DATA
+c ============================================================================
+c These arrays store radionuclide-specific emission rates and computed
+c air/dose concentrations for each stack/radionuclide combination
+
       REAL*8, ALLOCATABLE :: rademis(:,:)           !radionuclide emissions (Ci/s) for each stack
       REAL*8, ALLOCATABLE :: conc(:,:)              !radionuclide air concentration (Bq/m3)
       REAL*8, ALLOCATABLE :: dose(:,:)              !radionuclide dose (mrem/yr)
 
-      REAL*8, ALLOCATABLE :: sourceterm(:)
-      REAL*8, ALLOCATABLE :: initialamt(:)
-      REAL*8, ALLOCATABLE :: activity(:)
-      REAL*8, ALLOCATABLE :: surfaceactivity(:)
-      REAL*8, ALLOCATABLE :: ambientactivity(:)
-      REAL*8, ALLOCATABLE :: normsourceactivity(:)
+c ============================================================================
+c SECTION 3: DYNAMIC ARRAY DECLARATIONS - RADIOACTIVE DECAY CHAIN PARAMETERS
+c ============================================================================
+c These arrays track source terms, initial amounts, and activities for
+c decay chains (parent nuclide + radioactive progeny)
 
-      REAL*8, ALLOCATABLE :: aveglf(:)
-      REAL*8, ALLOCATABLE :: avegrt(:)
-      REAL*8, ALLOCATABLE :: amilklf(:)
-      REAL*8, ALLOCATABLE :: amilkrt(:)
-      REAL*8, ALLOCATABLE :: ameatlf(:)
-      REAL*8, ALLOCATABLE :: ameatrt(:)
-      REAL*8, ALLOCATABLE :: cfveg(:)
-      REAL*8, ALLOCATABLE :: cfmilk(:)
-      REAL*8, ALLOCATABLE :: cfmeat(:)
-      REAL*8, ALLOCATABLE :: dveg(:)
-      REAL*8, ALLOCATABLE :: dmilk(:)
-      REAL*8, ALLOCATABLE :: dmeat(:)
-      REAL*8, ALLOCATABLE :: ingdose(:)
+      REAL*8, ALLOCATABLE :: sourceterm(:)          !source term for decay calculation
+      REAL*8, ALLOCATABLE :: initialamt(:)          !initial amount of nuclide
+      REAL*8, ALLOCATABLE :: activity(:)            !computed activity (Ci/m3)
+      REAL*8, ALLOCATABLE :: surfaceactivity(:)     !activity on ground surface
+      REAL*8, ALLOCATABLE :: ambientactivity(:)     !activity in air
+      REAL*8, ALLOCATABLE :: normsourceactivity(:)  !normalized surface activity
 
-      REAL*8, ALLOCATABLE :: kvalue(:)
-      REAL*8, ALLOCATABLE :: ktot(:)
-      REAL*8, ALLOCATABLE :: xbveg(:)
-      REAL*8, ALLOCATABLE :: xbfor(:)
-      REAL*8, ALLOCATABLE :: xfmilk(:)
-      REAL*8, ALLOCATABLE :: xfmeat(:)
+c ============================================================================
+c SECTION 4: DYNAMIC ARRAY DECLARATIONS - INGESTION PATHWAY TRANSFER FACTORS
+c ============================================================================
+c These arrays store intermediate calculated activities used in computing
+c radionuclide concentrations in vegetables, milk, and meat
 
-      REAL*4, ALLOCATABLE :: halflife(:)          !radionuclide half life (years)
-      REAL*4, ALLOCATABLE :: wbfac(:)             !whole body dose factor from NCRP Commentary 3 table 2
-      REAL*4, ALLOCATABLE :: xwbfac(:)            !whole body dose factor from NCRP Commentary 3 table 3
-      REAL*4, ALLOCATABLE :: vegfac(:)            !vegetable dose factor from NCRP Commentary 3 table 7
-      REAL*4, ALLOCATABLE :: cowfac(:)            !cow dose factor from NCRP Commentary 3
-      REAL*8, ALLOCATABLE :: inhalationfac(:)     !inhalation dose factor from ICRP table 2.1  
-      REAL*8, ALLOCATABLE :: immersionfac(:)      !immersion dose factor from NCRP Commentary Table C5
-      REAL*8, ALLOCATABLE :: surfacefac(:)        !surface dose factor from NCRP Commentary Table C6
-      REAL*8, ALLOCATABLE :: ingestionfac(:)      !ingestion dose factor from ICRP Table 2.2
-      REAL*8, ALLOCATABLE :: drydepvel(:)         !dry deposition velocity (meters/day) from NCRP Commentary Table L4
+      REAL*8, ALLOCATABLE :: aveglf(:)              !vegetable leaf activity (short-term weathering)
+      REAL*8, ALLOCATABLE :: avegrt(:)              !vegetable root activity (long-term deposition)
+      REAL*8, ALLOCATABLE :: amilklf(:)             !milk forage leaf activity (short-term)
+      REAL*8, ALLOCATABLE :: amilkrt(:)             !milk forage root activity (long-term)
+      REAL*8, ALLOCATABLE :: ameatlf(:)             !meat forage leaf activity (short-term)
+      REAL*8, ALLOCATABLE :: ameatrt(:)             !meat forage root activity (long-term)
+      REAL*8, ALLOCATABLE :: cfveg(:)               !concentration factor in vegetables (Ci/kg)
+      REAL*8, ALLOCATABLE :: cfmilk(:)              !concentration factor in milk (Ci/L)
+      REAL*8, ALLOCATABLE :: cfmeat(:)              !concentration factor in meat (Ci/kg)
+      REAL*8, ALLOCATABLE :: dveg(:)                !dose from vegetable ingestion (mrem/yr)
+      REAL*8, ALLOCATABLE :: dmilk(:)               !dose from milk ingestion (mrem/yr)
+      REAL*8, ALLOCATABLE :: dmeat(:)               !dose from meat ingestion (mrem/yr)
+      REAL*8, ALLOCATABLE :: ingdose(:)             !total ingestion dose
 
-      REAL*8, ALLOCATABLE :: imdose(:)
-      REAL*8, ALLOCATABLE :: ihdose(:)
-      REAL*8, ALLOCATABLE :: surfdose(:)
-      REAL*8, ALLOCATABLE :: totimdose(:,:)
-      REAL*8, ALLOCATABLE :: totihdose(:,:)
-      REAL*8, ALLOCATABLE :: totsurfdose(:,:)
-      REAL*8, ALLOCATABLE :: totingdose(:,:)
+c ============================================================================
+c SECTION 5: DYNAMIC ARRAY DECLARATIONS - DEPOSITION & DECAY FACTORS
+c ============================================================================
+c These arrays store parameters controlling deposition rates and radioactive
+c decay of nuclides and their environmental transfer
+
+      REAL*8, ALLOCATABLE :: kvalue(:)              !decay constant (1/day)
+      REAL*8, ALLOCATABLE :: ktot(:)                !total removal constant (decay + deposition)
+      REAL*8, ALLOCATABLE :: xbveg(:)               !root uptake factor for vegetables
+      REAL*8, ALLOCATABLE :: xbfor(:)               !root uptake factor for forage
+      REAL*8, ALLOCATABLE :: xfmilk(:)              !transfer factor to milk
+      REAL*8, ALLOCATABLE :: xfmeat(:)              !transfer factor to meat
+
+c ============================================================================
+c SECTION 6: DYNAMIC ARRAY DECLARATIONS - RADIONUCLIDE DOSE FACTORS
+c ============================================================================
+c These arrays store dose conversion factors (DCF) from NCRP/ICRP references
+c that convert nuclide activity to effective dose equivalent
+
+      REAL*4, ALLOCATABLE :: halflife(:)            !radionuclide half life (years)
+      REAL*4, ALLOCATABLE :: wbfac(:)               !whole body dose factor from NCRP Commentary 3 table 2
+      REAL*4, ALLOCATABLE :: xwbfac(:)              !whole body dose factor from NCRP Commentary 3 table 3
+      REAL*4, ALLOCATABLE :: vegfac(:)              !vegetable dose factor from NCRP Commentary 3 table 7
+      REAL*4, ALLOCATABLE :: cowfac(:)              !cow dose factor from NCRP Commentary 3
+      REAL*8, ALLOCATABLE :: inhalationfac(:)       !inhalation dose factor from ICRP table 2.1  
+      REAL*8, ALLOCATABLE :: immersionfac(:)        !immersion dose factor from NCRP Commentary Table C5
+      REAL*8, ALLOCATABLE :: surfacefac(:)          !surface dose factor from NCRP Commentary Table C6
+      REAL*8, ALLOCATABLE :: ingestionfac(:)        !ingestion dose factor from ICRP Table 2.2
+      REAL*8, ALLOCATABLE :: drydepvel(:)           !dry deposition velocity (m/day) from NCRP Commentary Table L4
+
+c ============================================================================
+c SECTION 7: DYNAMIC ARRAY DECLARATIONS - CUMULATIVE DOSE ARRAYS
+c ============================================================================
+c These arrays accumulate total doses across decay chains and receptor
+c locations for immersion, inhalation, surface deposition, and ingestion
+
+      REAL*8, ALLOCATABLE :: imdose(:)              !immersion dose component
+      REAL*8, ALLOCATABLE :: ihdose(:)              !inhalation dose component
+      REAL*8, ALLOCATABLE :: surfdose(:)            !surface dose component
+      REAL*8, ALLOCATABLE :: totimdose(:,:)         !total immersion dose per stack/radionuclide
+      REAL*8, ALLOCATABLE :: totihdose(:,:)         !total inhalation dose per stack/radionuclide
+      REAL*8, ALLOCATABLE :: totsurfdose(:,:)       !total surface dose per stack/radionuclide
+      REAL*8, ALLOCATABLE :: totingdose(:,:)        !total ingestion dose per stack/radionuclide
+
+c ============================================================================
+c SECTION 8: DYNAMIC ARRAY DECLARATIONS - PATHWAY-SPECIFIC DOSES
+c ============================================================================
+c These arrays store final calculated doses for specific ingestion pathways
+c at specific receptor locations
 
       REAL*8, ALLOCATABLE :: milkdose(:,:)          !radionuclide dose by milk (mrem/yr)
       REAL*8, ALLOCATABLE :: vegdose(:,:)           !radionuclide dose by vegetables (mrem/yr)
       REAL*8, ALLOCATABLE :: meatdose(:,:)          !radionuclide dose by meat (mrem/yr)
+
+c ============================================================================
+c SECTION 9: DYNAMIC ARRAY DECLARATIONS - METEOROLOGICAL DATA BY SECTOR
+c ============================================================================
+c These arrays store wind direction sector information (frequency, speed,
+c source-receptor distance) for computing sector-dependent air concentrations
+
       REAL*8, ALLOCATABLE :: windbinfreq(:,:)       !Sector (wind dir) frequency from that direction
       REAL*8, ALLOCATABLE :: windbinspeed(:,:)      !Sector (wind dir) average speed from that direction (m/s)
       REAL*8, ALLOCATABLE :: windbinsrdist(:,:)     !Sector (wind dir) source-receptor distance (m)
+
+c ============================================================================
+c SECTION 10: DYNAMIC ARRAY DECLARATIONS - INDEXING & METADATA
+c ============================================================================
 
       INTEGER, ALLOCATABLE :: nrads(:)              !number of emitted radionucludes at each stack
       INTEGER, ALLOCATABLE :: nwindbins(:)          !number of wind direction bins at each stack
@@ -95,7 +169,11 @@ c Declare dynamic arrays
       CHARACTER*200,ALLOCATABLE :: windloc(:)       !Location of wind data
       CHARACTER*200,ALLOCATABLE :: winddist(:)      !Distance from wind data to source
 
-! Declare other variables and calculated terms
+c ============================================================================
+c SECTION 11: STATIC VARIABLE DECLARATIONS - DISPERSION CALCULATION TERMS
+c ============================================================================
+c These variables are used in the Gaussian plume model calculations for
+c atmospheric dispersion and effective stack height corrections
 
       REAL FACTOR,FACTORB,FACTORC,FACTORD,FACTORE,FACTORF,FACTORG,FACTORH,FACTORI
       REAL FACTORJ,FACTORK,FACTORL,FACTORM,FACTORN
@@ -103,12 +181,16 @@ c Declare dynamic arrays
       REAL tempdose,maxdose,maxdist,totmilkdose,totvegdose,itotvegdose,totmeatdose,itotcowdose
       REAL capp,capn0,outprod,inprod,z1,term1,term2,sum
       REAL transittime                              !transit time of air from emission release to receptor (s)
-      REAL fdux                                     !not sure what this is-units are 1/(m2/s) or s/m2
-      REAL wetdepadj,wetdepadjbad                                !wet deposition adjustment factor
+      REAL fdux                                     !flux term units are 1/(m2/s) or s/m2
+      REAL wetdepadj,wetdepadjbad                   !wet deposition adjustment factor
       REAL xtime
       REAL xremove
       REAL ingestion, immersion, inhalation, surface
       REAL RHOAIR,RHOSTK,STKVEL,R,FM,DELHMO,DELHBU,HEFF,FB,zz,INHFAC,TINIT,T
+
+c ============================================================================
+c SECTION 12: STATIC VARIABLE DECLARATIONS - CONTROL & LOOP INDICES
+c ============================================================================
 
       INTEGER nstacks                               !number of unique stacks
       INTEGER receptor, N, M, I, J, K, L, II, JJ, P, Q                        !loop counters
@@ -123,7 +205,11 @@ c Declare dynamic arrays
       character*10 b(3)                         !for date stamp function
 
 
-! Open input and output files 
+c ============================================================================
+c SECTION 13: FILE OPERATIONS - OPEN INPUT AND OUTPUT FILES
+c ============================================================================
+c Open the necessary input files for model parameters and output files for
+c results reporting
 
       write(*,*)
       write(*,*)'COMPLY v2.0'
@@ -136,7 +222,10 @@ c Declare dynamic arrays
       open(9,file='comply171_original_input_data.csv',status='old',form='formatted')
       open(10,file='comply171_original_decaychain_data.csv',status='old',form='formatted')
 
-c Read input namelist file
+c ============================================================================
+c SECTION 14: INPUT PARSING - READ FACILITY IDENTIFICATION AND STACK COUNT
+c ============================================================================
+c Read project metadata and determine the number of stacks to process
 
        read(11,'(20x,a)') title
        read(11,'(20x,a)') company
@@ -146,6 +235,12 @@ c Read input namelist file
        read(11,'(20x,a)') phone
 
        read(11,'(20x,i3)') nstacks
+
+c ============================================================================
+c SECTION 15: MEMORY ALLOCATION - ALLOCATE STACK-LEVEL PARAMETER ARRAYS
+c ============================================================================
+c Allocate arrays to store stack-specific parameters (heights, distances,
+c temperatures, etc.) based on the number of stacks
 
        allocate(latitude(nstacks))
        allocate(longitude(nstacks))
@@ -173,6 +268,12 @@ c Read input namelist file
        allocate(nwindbins(nstacks))
        allocate(rainfall(nstacks))
 
+c ============================================================================
+c SECTION 16: INPUT PARSING LOOP - READ STACK-SPECIFIC PARAMETERS
+c ============================================================================
+c Main loop to read input parameters for each stack source. Includes
+c geometrical parameters, temperatures, distances to receptors, and
+c number of emitted radionuclides
 
        do n = 1, nstacks 
 
@@ -199,6 +300,13 @@ c Read input namelist file
        read(11,'(20x,f10.5)') rainfall(n)
 
        read(11,'(20x,i3)') nrads(n)
+
+c ============================================================================
+c SECTION 17: MEMORY ALLOCATION - RADIONUCLIDE & DOSE FACTOR ARRAYS
+c ============================================================================
+c Allocate arrays for radionuclide emissions, concentrations, doses, and
+c dose factors. Note: These are allocated within the stack loop but assume
+c a maximum of 19 nuclides in decay chain
 
        allocate(radname(nstacks,nrads(n)))
        allocate(rademis(nstacks,nrads(n)))
@@ -255,10 +363,22 @@ c Read input namelist file
        allocate(vegdose(nstacks,nrads(n)))
        allocate(meatdose(nstacks,nrads(n)))
 
+c ============================================================================
+c SECTION 18: INPUT PARSING - READ RADIONUCLIDE EMISSION DATA
+c ============================================================================
+c For each stack, read the list of radionuclides emitted and their
+c emission rates (in Ci/s)
+
        do m = 1, nrads(n)
        read(11,'(20x,a)') inline
        read(inline,*) radname(n,m),rademis(n,m)
        enddo !end loop over reading in radionuclide emissions
+
+c ============================================================================
+c SECTION 19: INPUT PARSING - READ METEOROLOGICAL DATA SOURCE & WIND SECTORS
+c ============================================================================
+c Read metadata about wind data source and sector-based wind statistics
+c (frequency, speed, source-receptor distance) for each wind direction bin
 
        read(11,'(20x,a)') windsource(n)
        read(11,'(20x,a)') winddates(n)
@@ -282,9 +402,16 @@ c Read input namelist file
        enddo !end loop over reading in stacks
 
 
-
-!Calculate air concentrations
-!Emission rate assumption is Ci/s
+c ============================================================================
+c SECTION 20: MAIN CALCULATION LOOP - AIR CONCENTRATIONS & DOSES
+c ============================================================================
+c This is the core calculation loop that computes atmospheric dispersion,
+c radioactive decay, and dose calculations for all combinations of:
+c   - Stacks (n)
+c   - Radionuclides (m)
+c   - Wind direction sectors (j)
+c   - Receptor distances (receptor loop: 10 to 3010 m in 10 m increments)
+c ============================================================================
 
        write(13,3001) !write header to file
 
@@ -292,15 +419,32 @@ c Read input namelist file
 
        alldose = 0.
 
+c ============================================================================
+c SECTION 21: SURFACE RELEASE SPECIAL CASE
+c ============================================================================
+c If the release height is zero (ground-level/area source), clear the
+c building dimensions since COMPLY assumes no release shape geometry for
+c surface releases
+
        if(releaseht(n).eq.0.0) then !surface release
        bldwidth(n) = 0.0 !odd that comply assumes no release shape geometry for a surface (area) release
        bldheight(n) = 0.0
        endif
 
+c ============================================================================
+c SECTION 22: INITIALIZE DISPERSION PARAMETERS
+c ============================================================================
+c Calculate the critical distance (xcrit) which represents the crossover
+c point between near-field (simple) and far-field (Gaussian plume) models
+
        area = bldwidth(n) * bldheight(n)
        xcrit = 2.5 * sqrt(area)
 
        do m = 1, nrads(n)
+
+c ============================================================================
+c SECTION 23: INITIALIZE DOSE ACCUMULATORS FOR CURRENT RADIONUCLIDE
+c ============================================================================
 
        maxdose = 0.0
        inhalation = 0.
@@ -310,15 +454,28 @@ c Read input namelist file
        totvegdose = 0.
        totmeatdose = 0.
 
-!move reading in decay chains to here??
-
-
+c ============================================================================
+c SECTION 24: WIND SECTOR AND DISTANCE ITERATION LOOPS
+c ============================================================================
+c Loop over wind direction sectors and receptor distances. For each combination,
+c calculate air concentration and dose contributions across all decay pathways
 
        do j = 1, nwindbins(n)
 
        do receptor = 10, 3010, 10
 
        dist = float(receptor)
+
+c ============================================================================
+c SECTION 25: STACK PLUME RISE CALCULATIONS
+c ============================================================================
+c Calculate the effective release height (HEFF) by accounting for:
+c   - Buoyancy rise: hot exhaust plume rises due to thermal buoyancy
+c   - Momentum rise: vertical velocity of exhaust provides additional rise
+c   - Wind shear: ambient wind speed reduces plume rise
+c
+c Only applied if release height > 2.5 * building height (elevated release)
+c ============================================================================
 
        if(exitvelocity(n).le.0.) then
        exitvelocity(n) = 0.3
@@ -328,20 +485,20 @@ c Read input namelist file
 
        IF ( releaseht(n) .GT. 2.5*bldheight(n) ) THEN
 
-! Temperature
+c --- Temperature and density calculations ---
         RHOAIR = 0.0735 * ( 80.0 + 460.0 ) / ( airtemp(n) + 460.0 )
         RHOAIR = RHOAIR * 454.0 / ( 0.3048 ** 3 )
         RHOSTK = RHOAIR * ( airtemp(n) + 460.0 ) / ( stacktemp(n) + 460.0 )
 
-! Momentum
+c --- Momentum rise calculations ---
         AREA   = 3.14 * ( diameter(n) ** 2.0 ) / 4.0
         STKVEL = exitvelocity(n) / AREA
         R      = STKVEL / windbinspeed(n,j)
         FM     = ( RHOSTK / RHOAIR ) * STKVEL * exitvelocity(n) / 3.14
         TERM1  = 75.0 * FM / ( ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) ) ** 2.0 )
-        TERM2  = releaseht(n) + 7.79 * SQRT( FM ) / ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) ) !is this stack height or HEFF??
+        TERM2  = releaseht(n) + 7.79 * SQRT( FM ) / ( ( 1.0 + 3.0 / R ) * windbinspeed(n,j) )
 
-! If the site has a vertical stack, then the momentum rise value is zero, otherwise compute the value.
+c --- Apply momentum rise if vertical momentum enabled ---
         IF ( verticalmomentum(n).eq.'YES' ) THEN
          DELHMO = 0.93 * ( TERM1 ** ( 3.0 / 7.0 ) ) *
      &        ( TERM2 ** ( 1.0 / 7.0 ) )
@@ -349,17 +506,23 @@ c Read input namelist file
          DELHMO = 0.0
         ENDIF
 
-! Buoyant
+c --- Buoyancy rise calculations ---
         FB = 9.81 * ( RHOAIR - RHOSTK ) * exitvelocity(n) / ( 3.14 * RHOAIR )
         DELHBU = 23.67 * ( ( FB / ( windbinspeed(n,j) ** 3.0 ) ) ** 0.6 ) *
-     &           ( releaseht(n) + 195.1 * FB / ( windbinspeed(n,j) ** 3.0 ) ) ** 0.4 !stack height or HEFF??
+     &           ( releaseht(n) + 195.1 * FB / ( windbinspeed(n,j) ** 3.0 ) ) ** 0.4
 
-! Use maximum of buoyant or momentum rise
+c --- Use maximum of buoyancy or momentum rise ---
        HEFF = releaseht(n) + AMAX1( DELHMO, DELHBU )
-!!       write(*,*)'WW',releaseht(n),HEFF,DELHMO, DELHBU
 
        ENDIF !end condition where H > 0
 
+c ============================================================================
+c SECTION 26: GAUSSIAN PLUME MODEL - CONCENTRATION AT RECEPTOR
+c ============================================================================
+c Calculate air concentration at receptor distance using Gaussian plume
+c model with lateral (sigma_z) and source area (CAPSIG) corrections.
+c Includes near-field correction for distances less than xcrit.
+c ============================================================================
 
        SIGMAZ = (0.06 * dist) / SQRT( 1.0 + 0.0015 * dist)
        CAPSIG = SQRT( SIGMAZ ** 2 + area / 3.14 )
@@ -370,10 +533,10 @@ c Read input namelist file
         pp = 2.032 / ( dist * CAPSIG )
         endif
 
-
        transittime = (dist / windbinspeed(n,j))*(1./3600.)*(1./24.) ! seconds to days
        fdux = (windbinfreq(n,j)/(1.0-pctcalm(n))) / (windbinspeed(n,j)*dist) !s/m2 units
 
+c --- Near-field vs far-field concentration calculation ---
        if(dist.lt.xcrit) then
        conc(n,m) = ( (windbinfreq(n,j)/(1.0-pctcalm(n))) *rademis(n,m)) /
      &          (3.14*windbinspeed(n,j)*1.0*amin1(bldwidth(n),bldheight(n)))
@@ -387,19 +550,28 @@ c Read input namelist file
 
        altconc = (windbinfreq(n,j)*rademis(n,m)*pp) / windbinspeed(n,j) !just for QA and not being used for anything else here
 
-       !rainfall rate supposedly m/yr
-       !emissions should be in Ci/s
-       !concentration should be in Ci/m3
-       !dry dep velocity in m/day
+c ============================================================================
+c SECTION 27: WET DEPOSITION ADJUSTMENT FACTOR
+c ============================================================================
+c Account for removal of radioactive material via precipitation (wet
+c deposition) combined with dry deposition velocity. This adjusts the
+c ground-level deposition for rainfall conditions.
+c
+c Rainfall rate is in m/yr, emissions in Ci/s, concentration in Ci/m3
+c ============================================================================
+
        wetdepadj = (8.0 * fdux * rainfall(n) * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m) )
        wetdepadjbad = (8.0 * fdux * rainfall(n) * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m)/rademis(n,m) )
-       !!! error in comply171       wetdepadj = (8.0 * fdux * 1.0 * 1.0E-05 * (rademis(n,m) * 3600. * 24.))/(3.1416*conc(n,m)/rademis(n,m) )
 
-!       if(dist.eq.240) then
-!               write(*,*)'AIR CONC:',radname(n,m),conc(n,m),windbinfreq(n,j),windbinspeed(n,j),wetdepadj
-!       endif
-
-!Find decay chain and relevant half-life values
+c ============================================================================
+c SECTION 28: DECAY CHAIN LOOKUP - READ NUCLIDE DATA FROM REFERENCE TABLE
+c ============================================================================
+c For each emitted radionuclide, search the reference CSV file to find:
+c   - Decay chain (parent + progeny nuclides)
+c   - Half-lives for all nuclides in chain
+c   - Dose conversion factors for all pathways
+c   - Environmental transfer factors (root uptake, animal transfer, etc.)
+c ============================================================================
 
        rewind(9)
        rewind(10)
@@ -410,12 +582,12 @@ c Read input namelist file
          read(inline,*) NUC,k,(decaychain(l),l=1,k)
          if(NUC.eq.radname(n,m)) then
           read(inline,*) NUC,k,(decaychain(l),l=1,k)
-!          write(*,*)'Decay chain:', NUC,k,(decaychain(l),l=1,k)
+
           do jj = 1, 826
           read(9,'(a)') inline
-!          write(*,*) inline
           read(inline,*) NUC,FACTOR,FACTORB,FACTORC,FACTORD,FACTORE,FACTORF,FACTORG,
      &      FACTORH,FACTORI,FACTORJ,FACTORK,FACTORL,FACTORM,FACTORN
+
            do l = 1, k
            if(NUC.eq.decaychain(l)) then
             decaychainname(l) = NUC
@@ -428,10 +600,6 @@ c Read input namelist file
             immersionfac(l) = FACTORG
             surfacefac(l) = FACTORH
             ingestionfac(l) = FACTORI
-!            inhalationfac(l) = 0.0
-!            immersionfac(l) = 0.0
-!            surfacefac(l) = 0.0
-!            ingestionfac(l) = 1.0
             xbveg(l) = FACTORJ
             xbfor(l) = FACTORK
             xfmilk(l) = FACTORL
@@ -444,17 +612,13 @@ c Read input namelist file
          endif 
          enddo !loop over all nuclides on decay chain input table
 
-!         if(dist.eq.10) then
-!          do l = 1, k
-!          write(*,*)'Decay chain:', k,decaychainname(l),halflife(l),wbfac(l),inhalationfac(l),immersionfac(l),surfacefac(l),
-!     &      ingestionfac(l),drydepvel(l)
-!!            write(*,*) 'Decay chain:',decaychainname(l),xbveg(l),xbfor(l),xfmilk(l),xfmeat(l)
-!          enddo
-!          endif
-
-!Calculate parent and progeny ambient activity
-
-!         write(*,*)'Calculating activity for nuclides in the decay chain (N=',nchain,')'
+c ============================================================================
+c SECTION 29: INHALATION & IMMERSION DOSE CALCULATION
+c ============================================================================
+c Calculate doses from inhalation of contaminated air and immersion in
+c contaminated air. These are pathway doses based on air concentration
+c and are independent of ground deposition.
+c ============================================================================
 
          do l = 1, nchain !loop over radionuclide and progeny
          sourceterm(l) = 0.0
@@ -480,7 +644,15 @@ c Read input namelist file
          totihdose(n,m) = totihdose(n,m) + ihdose(l)
          enddo
 
-!Calculate parent and progeny activity at the ground level
+c ============================================================================
+c SECTION 30: SURFACE DEPOSITION DOSE CALCULATION
+c ============================================================================
+c Calculate doses from external radiation exposure to radionuclides
+c deposited on the ground surface. Accounts for:
+c   - Dry deposition (particle settling)
+c   - Wet deposition (rain removal)
+c   - Noble gases (no deposition): HE, NE, AR, KR, XE, RN
+c ============================================================================
 
          do l = 1, nchain !loop over radionuclide and progeny
          sourceterm(l) = ambientactivity(l)
@@ -509,15 +681,16 @@ c Read input namelist file
           surfaceactivity(l) = activity(l) * (drydepvel(l)+wetdepadj)
           endif
          surfdose(l) = surfaceactivity(l) * surfacefac(l)
-!         if(dist.eq.240) then
-!         write(*,*)'!',l,decaychainname(l),activity(l),drydepvel(l),wetdepadj,surfaceactivity(l),surfacefac(l),surfdose(l)
-!         endif
          totsurfdose(n,m) = totsurfdose(n,m) + surfdose(l)
          enddo
 
-!Calculate parent and progeny activity for ingestion pathways
-
-!!! Normalized surface activity 
+c ============================================================================
+c SECTION 31: INGESTION PATHWAY NORMALIZED ACTIVITY CALCULATION
+c ============================================================================
+c Calculate normalized surface activity (for unit initial concentration)
+c to use as basis for ingestion pathway calculations. This is then
+c multiplied by sector-dependent transfer factors to get pathway doses.
+c ============================================================================
 
          do l = 1, nchain !loop over radionuclide and progeny
          sourceterm(l) = 0.0
@@ -546,7 +719,14 @@ c Read input namelist file
 
          enddo
 
-!!! Vegetables
+c ============================================================================
+c SECTION 32: VEGETABLE INGESTION PATHWAY
+c ============================================================================
+c Calculate activity in vegetables via:
+c   - Leaf deposition and weathering (short-term, TWEATH=0.693/12 day-1)
+c   - Root uptake from soil (long-term, residence time ~100 years)
+c Equations follow NCRP Commentary 3 recommendations.
+c ============================================================================
 
          do l = 1, nchain !loop over radionuclide and progeny
          sourceterm(l) = normsourceactivity(l)
@@ -579,7 +759,14 @@ c Read input namelist file
          avegrt(l) = activity(l)
          enddo
 
-!!! milk
+c ============================================================================
+c SECTION 33: MILK INGESTION PATHWAY (VIA FORAGE)
+c ============================================================================
+c Calculate activity in milk via:
+c   - Forage leaf deposition and weathering (short-term)
+c   - Forage root uptake from soil (long-term)
+c   - Transfer to milk via cow consumption and biological transfer factor
+c ============================================================================
 
          do l = 1, nchain !loop over radionuclide and progeny
          sourceterm(l) = normsourceactivity(l)
@@ -611,7 +798,14 @@ c Read input namelist file
          amilkrt(l) = activity(l)
          enddo
 
-!!! meat
+c ============================================================================
+c SECTION 34: MEAT INGESTION PATHWAY (VIA FORAGE)
+c ============================================================================
+c Calculate activity in meat via:
+c   - Forage leaf deposition and weathering (short-term)
+c   - Forage root uptake from soil (long-term)
+c   - Transfer to meat via animal consumption and biological transfer factor
+c ============================================================================
 
          do l = 1, nchain !loop over radionuclide and progeny
          sourceterm(l) = normsourceactivity(l)
@@ -643,7 +837,15 @@ c Read input namelist file
          ameatrt(l) = activity(l)
          enddo
 
-!Estimate concentration in media
+c ============================================================================
+c SECTION 35: FOOD TRANSFER FACTOR CALCULATIONS
+c ============================================================================
+c Calculate nuclide concentration in food media (vegetables, milk, meat)
+c using element-specific transfer models:
+c   - Tritium (H-3): water-based model (high transfer to biota)
+c   - Carbon-14: carbon cycle model (high transfer to biota)
+c   - Other nuclides: NCRP Commentary 3 Equation B2 model
+c ============================================================================
 
          read(radname(n,m),'(a2)') NN
 
@@ -651,31 +853,35 @@ c Read input namelist file
 
           if(NN.eq.'H-') then !H-3 (tritium) -  D. A. Baker, et al, EPA 600/9-76-016, July 1976.
           cfveg(l) = conc(n,m)*9.0*(0.1/0.8E-02) ! (FHVEG / CH2O )
-          !CFVEG(  KDTR ) = ( VEGAIR * 9.0 * FHVEG  / CH2O )
           cfmilk(l) = (conc(n,m)*9.0*7.0E-02/8.0E-03)*16.0*0.11/(7.0E-02*16. + 220.0/9.0)
-          !CFMILK( KDTR ) = ( MILKAIR * 9.0 * FHFEED / CH2O ) * QMILK * FHMILK / ( FHFEED * QMILK) + (QWMILK / 9.0 )
           cfmeat(l) = (conc(n,m)*9.0*7.0E-02/8.0E-03)*12.0*0.10/(7.0E-02*12. + 50.0/9.0) 
-          !CFMEAT( KDTR ) = ( MEATAIR * 9.0 * FHFEED / CH2O ) * QMEAT * FHMEAT / ( FHFEED * QMEAT + QWMEAT / 9.0 )
 
           elseif(NN.eq.'C-') then !C14 - D. A. Baker, et al, EPA 600/9-76-016, July 1976.
           cfveg(l) = conc(n,m)*(9.000000E-02/0.16E-03)
-          !CFVEG(  KDTR ) = VEGAIR  * FCVEG  / CCARB
           cfmilk(l) = conc(n,m)*(7.0000000E-02/0.16E-03)
-          !CFMILK( KDTR ) = MILKAIR * FCMILK / CCARB
           cfmeat(l) = conc(n,m)*(0.2400000/0.16E-03)
-          !CFMEAT( KDTR ) = MEATAIR * FCMEAT / CCARB
 
           else !Equation B2 of NCRP Commentary 3
           cfveg(l) =  conc(n,m) * ((0.1/1.0)*aveglf(l)+(xbveg(l)/220.)*avegrt(l))
-          !CFVEG( KDTR )  = VEGAIR * (( FRVEG / YVEG ) * AVEGLF( KDTR ) +( BVEG  / PVEG ) * AVEGRT( KDTR ) )
           cfmilk(l) = conc(n,m) * ((1.8/1.0)*amilklf(l)+(xbfor(l)/220.)*amilkrt(l))*xfmilk(l)*16.0
-          !CFMILK(KDTR)= MILKAIR*((FRMILK/YMILK)*AMILKLF(KDTR)+(BFOR/PMILK)*AMILKRT(KDTR))*FMILK*QMILK
           cfmeat(l) = conc(n,m) * ((1.8/1.0)*ameatlf(l)+(xbfor(l)/220.)*ameatrt(l))*xfmeat(l)*12.0
-          !CFMEAT(KDTR)=MEATAIR*((FRMEAT/YMEAT)*AMEATLF(KDTR)+(BFOR/PMEAT)*AMEATRT(KDTR))*FMEAT*QMEAT
           endif
 
           enddo
 
+c ============================================================================
+c SECTION 36: INGESTION DOSE CALCULATIONS - VEGETABLES, MILK, MEAT
+c ============================================================================
+c For each food pathway:
+c   - Decay concentration in food from harvest to consumption
+c   - Apply ingestion dose conversion factor
+c   - Multiply by consumption rate (ingestion factor)
+c
+c Time delays account for:
+c   - Vegetables: ~11 days (harvest to consumption)
+c   - Milk: ~2 days (production to consumption)
+c   - Meat: ~17 days (slaughter to consumption)
+c ============================================================================
 
            do l = 1, nchain !loop over radionuclide and progeny
            sourceterm(l) = 0.0
@@ -724,6 +930,9 @@ c Read input namelist file
             dmeat(l) = activity(l) * ingestionfac(l) * 75. !CONMEAT = 75
             enddo
 
+c ============================================================================
+c SECTION 37: ACCUMULATE TOTAL INGESTION PATHWAY DOSES
+c ============================================================================
 
           vegdose(n,m) = 0.0
           milkdose(n,m) = 0.0
@@ -734,7 +943,13 @@ c Read input namelist file
           meatdose(n,m) = meatdose(n,m) + dmeat(l)
           enddo
 
-! Save dose information at key input receptor locations for report
+c ============================================================================
+c SECTION 38: REPORT KEY RECEPTOR LOCATIONS
+c ============================================================================
+c For specific receptor locations defined in input (vegetable garden,
+c milk cow, meat animal locations), report the computed doses. Also
+c accumulate total dose across all pathways and locations.
+c ============================================================================
 
        if(dist.eq.distanceveg(n).and.vegsector(n).eq.sectorname(n,j)) then !vegetable receptor
         alldose = alldose + vegdose(n,m)
@@ -754,6 +969,14 @@ c Read input namelist file
         write(*,*)'Meat dose:',radname(n,m),meatdose(n,m),dist,sectorname(n,j)
        endif
  
+c ============================================================================
+c SECTION 39: CALCULATE MAXIMUM DOSE RECEPTOR
+c ============================================================================
+c Find the receptor location (distance and sector) receiving the maximum
+c direct exposure dose (immersion + inhalation + surface deposition).
+c This is the critical dose location for regulatory comparison.
+c ============================================================================
+
        if(dist.eq.windbinsrdist(n,j)) then 
        write(*,*)'Air concentration:',radname(n,m),conc(n,m),sectorname(n,j),dist
             tempdose = totimdose(n,m) + totihdose(n,m) + totsurfdose(n,m)
@@ -764,12 +987,15 @@ c Read input namelist file
             surface = totsurfdose(n,m)
             immersion = totimdose(n,m)
             inhalation = totihdose(n,m)
-!         read(radname(n,m),'(a2)') NN
-!         if(NN.eq.'I-') then
-!         idose = idose + totimdose(n,m) + totihdose(n,m) + totsurfdose(n,m)
-!         endif
         endif
        endif
+
+c ============================================================================
+c SECTION 40: WRITE DETAILED DIAGNOSTIC OUTPUT
+c ============================================================================
+c Write comma-separated values to diagnostic file for all distance/sector
+c combinations, including concentrations and all dose components
+c ============================================================================
 
        write(13,3000) n,radname(n,m),sectorname(n,j),dist,
      &     conc(n,m),totimdose(n,m),totihdose(n,m),totsurfdose(n,m),
@@ -777,6 +1003,13 @@ c Read input namelist file
 
        enddo !end loop over distances between source and receptor (receptor)
        enddo !end loop over number of wind direction bins (j)
+
+c ============================================================================
+c SECTION 41: CONSOLE OUTPUT - SUMMARY OF DOSES FOR CURRENT RADIONUCLIDE
+c ============================================================================
+c Print dose summaries by pathway (inhalation, immersion, surface, ingestion)
+c and total dose at the maximum dose receptor location.
+c ============================================================================
 
        alldose = alldose + surface + immersion + inhalation
        write(*,*)'Max dose (',maxdose,') receptor at ',windbinsrdist(n,maxsect),sectorname(n,maxsect)
@@ -792,6 +1025,15 @@ c Read input namelist file
        write(*,*)'--------------------------------------------------------------------------' 
        enddo !end loop over radionuclides (m)
 
+c ============================================================================
+c SECTION 42: CONSOLE OUTPUT - TOTAL FACILITY DOSE AND REGULATORY LIMITS
+c ============================================================================
+c Report total cumulative effective dose equivalent across all stacks and
+c radionuclides. Compare to EPA dose limits:
+c   - General public: 10 mrem/yr
+c   - Iodine: 3 mrem/yr
+c ============================================================================
+
        write(*,*)
        write(*,3100)'Total dose (mrem/yr):',alldose
        write(*,*)'Total dose limit is 10.0 mrem/yr'
@@ -800,12 +1042,22 @@ c Read input namelist file
 
        enddo !end loop over stacks (n)
 
+c ============================================================================
+c SECTION 43: FORMAT STATEMENTS FOR OUTPUT
+c ============================================================================
+
  2999  FORMAT(a30,a10,f20.15)
  3000  FORMAT(i2,',',a,',',a,',',f6.1,',',f30.20,6(',',f20.10))
  3001  FORMAT('STACK,RADNAME,SECTOR,DISTANCE,CONC,IMMERSION,INHALATION,SURFACE,MEAT,MILK,VEG')
  3100  FORMAT(a,f10.4)
 
-c Write stardardized output
+c ============================================================================
+c SECTION 44: WRITE STANDARDIZED OUTPUT REPORT
+c ============================================================================
+c Generate human-readable output report with facility identification,
+c stack parameters, dose results by radionuclide and pathway, and
+c execution timestamp
+c ============================================================================
 
        write(12,4000)
        write(12,2001)
@@ -855,8 +1107,12 @@ c Write stardardized output
        write(12,2050) alldose
        write(12,2002)
 
-
-c Add time stamp of model simulation to output file
+c ============================================================================
+c SECTION 45: PROGRAM EXECUTION TIMESTAMP
+c ============================================================================
+c Capture and write execution date and time for traceability and
+c regulatory documentation purposes
+c ============================================================================
 
        call date_and_time(b(1), b(2), b(3), date_time)
 
@@ -880,7 +1136,9 @@ c Add time stamp of model simulation to output file
      &           date_time(5),date_time(6)
 
 
-c Formatting for output file
+c ============================================================================
+c SECTION 46: FORMAT STATEMENTS FOR REPORT OUTPUT
+c ============================================================================
 
  1000 FORMAT('Project:',a)
  1001 FORMAT('Company:',a)
@@ -913,7 +1171,9 @@ c Formatting for output file
  2100 FORMAT('Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):',i2,'/',i2,'/',i4,' ',i2,':',i2)
  4000 FORMAT('COMPLY version 2.0 level 4 distributed through GitHub')
 
-! End of program
+c ============================================================================
+c END OF PROGRAM
+c ============================================================================
 
       END 
 
