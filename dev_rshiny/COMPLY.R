@@ -1,24 +1,19 @@
 
+setwd("C:/Users/MMACDO01/OneDrive - Environmental Protection Agency (EPA)/Github/comply/dev_rshiny")
+
+
+
 #######################
 
 #    C O M P L Y
 
-#   Version:02/04/26
+#   Version:05/19/26
 #   macdonald.megan@epa.gov
 
 #######################
 
-
-
-
-
 # This is a Shiny web application. You can run the application by clicking the 'Run App' button above.
 
-
-
-setwd("C:/Users/MMACDO01/OneDrive - Environmental Protection Agency (EPA)/MM Projects & Code/COMPLY Shiny App/COMPLY")
-
-
 library(dplyr)
 library(shiny)
 library(leaflet)
@@ -28,230 +23,283 @@ library(reshape2)
 library(ggplot2)
 library(tidyr)
 library(plotly)
-
+library(bslib)
+library(tibble)
 library(leaflet.extras)
-
 library(sf)
 
-library(dplyr)
-library(shiny)
-library(leaflet)
-library(tidygeocoder)
-library(DT)
-library(reshape2)
-library(ggplot2)
-library(tidyr)
-library(plotly)
+# Helper to ensure column names are syntactic
+make_syntactic <- function(df) { names(df) <- make.names(names(df)); df }
 
-library(leaflet.extras)
-
-
-
-# define these lookup tables for use in the app ... need to make tehse available with app code in folder
-doses_info <- read.csv(file="C:/Users/MMACDO01/OneDrive - Environmental Protection Agency (EPA)/MM Projects & Code/COMPLY Shiny App/COMPLY/comply171_original_input_data.csv",skip=0,header=T)
-doses_info$Radionuclide <- trimws(doses_info$Nuclide)
-
-
-rads <- read.csv(file="comply171_original_possession_tables.csv",skip=0,header=T)
-nrow(rads)
-long_rads <- melt(rads, 
-                  id.vars = "Nuclide", 
-                  variable.name = "Form", 
-                  value.name = "Allowance")
+# Used in Level 1: load possession table
+rads_src <- read.csv(file="comply171_original_possession_data.csv", skip=0, header=TRUE)
+long_rads <- melt(rads_src, id.vars = "Nuclide", variable.name = "Form", value.name = "Allowance")
 long_rads$Radionuclide <- gsub(" ", "", long_rads$Nuclide)
 long_rads$Type <- gsub(" ", "", long_rads$Form)
-long_rads <- long_rads[,c(4,5,3)]
+long_rads <- long_rads[, c(4, 5, 3)]
+# long_rads columns: Radionuclide, Type, Allowance
 
+# Used in Level 2: dose coefficients/lookup
+doses_info <- read.csv(file="comply171_original_input_data.csv", skip=0, header=TRUE)
+doses_info$Radionuclide <- trimws(doses_info$Nuclide)
+doses_info <- make_syntactic(doses_info)  # ensure consistent names for joins/mutate
 
+# align expected dose coefficient column names if needed
+cn <- names(doses_info)
+if ("WB.dose.y" %in% cn && !"WBdose.y" %in% cn) {
+  names(doses_info)[names(doses_info) == "WB.dose.y"] <- "WBdose.y"
+}
+if ("Veg.dose" %in% cn && !"VegDose" %in% cn) {
+  names(doses_info)[names(doses_info) == "Veg.dose"] <- "VegDose"
+}
+if ("CowMilk.dose" %in% cn && !"CowMilkDose" %in% cn) {
+  names(doses_info)[names(doses_info) == "CowMilk.dose"] <- "CowMilkDose"
+}
 
-
-
-
-
-
-# Prepare blank dataframes
+# Blank templates as zero-row data frames
+rads <- data.frame(
+  Stack.ID = character(),
+  Radionuclide = character(),
+  Type = character(),
+  Emission = numeric(),
+  Allowance = numeric(),
+  Fraction = numeric(),
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
 
 stacks <- data.frame(
-  `Stack ID` = as.character(NA),
-  `Release Height` = round(as.numeric(NA),1),
-  `Building Height` = round(as.numeric(NA),1),
-  `Building Width` = round(as.numeric(NA),1),
-  `Source Distance`= round(as.numeric(NA),1),
-  `Veg Distance`= round(as.numeric(NA),1),
-  `Cow Distance`= round(as.numeric(NA),1),
-  `Mean WS`= round(as.numeric(NA),1)
+  Stack.ID = character(),
+  Release.Height = numeric(),
+  Building.Height = numeric(),
+  Building.Width = numeric(),
+  Source.Distance = numeric(),
+  Veg.Distance = numeric(),
+  Cow.Distance = numeric(),
+  Mean.WS = numeric(),
+  stringsAsFactors = FALSE,
+  check.names = FALSE
 )
-
-rads <- data.frame(
-  `Stack ID`= as.character(NA),
-  `Radionuclide` = as.character(NA),
-  `Type` =  as.character(NA),
-  `Emission` = round(as.numeric(NA),1),
-  `Allowance` = round(as.numeric(NA),1),
-  `Percent` = round(as.numeric(NA),1)
-  
-)
-
 doses <- data.frame(
-  `Stack.ID` = as.character(NA),
-  `Radionuclide` = as.character(NA),
-  `Type` =  as.character(NA),
-  `Source.Distance` =  round(as.numeric(NA),1),
-  `dose`= round(as.numeric(NA),1),
-  `vdose` = round(as.numeric(NA),1),
-  `cdose` =  round(as.numeric(NA),1),
-  `total` = round(as.numeric(NA),1)
+  Stack.ID = as.character(NA),
+  Radionuclide = as.character(NA),
+  Type = as.character(NA),
+  Source.Distance = as.numeric(NA),
+  airconc = as.numeric(NA),
+  dose = as.numeric(NA),
+  vdose = as.numeric(NA),
+  cdose = as.numeric(NA),
+  total = as.numeric(NA),
+  check.names = FALSE
+)
 
+radon <- data.frame(
+  Stack.ID = as.character(NA),
+  Emissions = as.numeric(NA),
+  Sector = as.character(NA),
+  Max.Sector = as.numeric(NA),
+  Sector.Name = as.numeric(NA),
+  Distance = as.numeric(NA),
+  Total.Dose = as.numeric(NA),
+  Conc = as.numeric(NA),
+  Wind.Frequency = as.numeric(NA),
+  Wind.Speed = as.numeric(NA),
+  
+  check.names = FALSE
 )
 
 
-
-
-#### APP CODE STARTS HERE:
-
+xsum <- data.frame(Fraction = as.numeric(NA))
 
 #### UI
-
-
-
 ui <- page_sidebar(
-  title = "COMPLY",
-  # Define the sidebar panel
+  title = "COMPLY v2.0",
   sidebar = sidebar(
     h6("Enter Facility Details:"),
     textInput("CompanyName", "Company Name:", ""),
     textInput("CompanyContact", "Company Contact Name:", ""),
-    textInput("CompanyContactNum", "Company Contact Number:", ""),
+    textInput("CompanyContactNum", "Company Contact Email:", ""),
     textInput("FacilityName", "Facility Name:", ""),
     h6("Enter Coordinates or Address:"),
     fluidRow(
-      column(6,
-             textInput("Latitude", "Latitude:", "")
-      ),
-      column(6,
-             textInput("Longitude", "Longitude:", "")
-      )
+      column(6, textInput("Latitude", "Latitude:", "")),
+      column(6, textInput("Longitude", "Longitude:", ""))
     ),
     textInput("address_input", "Facility Address:", "109 T.W. Alexander Drive, Durham, NC, 27709"),
-    actionButton("geocode_button", "Geocode Address"),
-    actionButton("add_heatmap_btn", "HEATMAP"),
+    actionButton("geocode_button", "Plot Location"),
     h6("Coordinates:"),
     textOutput("coords")
   ),
   
-  # Main panel content 
-  
-  # First row: Two cards using layout_columns for a grid
-  layout_columns(
-    # Card 1: Value box or plot
-    card(
-      full_screen = TRUE, # Optional: allows the card to go full screen
-      height = "1000px", # Sets a fixed height
-      card_header("Map"),
-      leafletOutput("map")
+  navset_tab(
+    id = "level_tabs",
+    selected = "level 1",
+    
+    nav_panel("level 1",
+              card(
+                full_screen = TRUE,
+                height = "500px",
+                navset_card_tab(
+                  nav_panel("Rads",
+                            tags$div(class = "d-flex gap-2 mb-2",
+                                     actionButton("add_rad_button", "Add Radionuclide", class = "btn-sm"),
+                                     actionButton("delete_rad_button", "Delete Selected Row", class = "btn-sm")
+                            ),
+                            tags$head(tags$style(HTML("
+              .dataTable td, .dataTable th { border: 1px solid black; }
+              .dt-button {
+                background-color: #f0f0f0 !important;
+                color: black !important;
+                border: 1px solid #000500 !important;
+              }"))),
+                            DTOutput("rad_table")
+                  ),
+                  nav_panel("Compliance Summary",
+                            textOutput("fraction_display"),
+                            textOutput("fraction_display_i")
+                  ),
+                  nav_panel("Export Data",
+                            downloadButton("downloadReport", "Generate HTML Report", class = "btn-sm", width = '20%')
+                  )
+                )
+              ),
+              layout_columns(
+                card(
+                  full_screen = TRUE,
+                  height = "500px",
+                  card_header("Map"),
+                  leafletOutput("map")
+                ),
+                card(
+                  full_screen = TRUE,
+                  height = "500px",
+                  card_header("Plot"),
+                  plotlyOutput(outputId = "graph")
+                ),
+                col_widths = c(6, 6)
+              )
     ),
-    # Card 2: Value box or plot
-    card(
-      full_screen = TRUE, # Optional: allows the card to go full screen
-      height = "1000px", # Sets a fixed height
-      card_header("Plot"),
-      plotlyOutput(outputId = "graph")
-      
-    ),
-    # Use col_widths to specify that both cards should be side-by-side in one row
-    col_widths = c(6, 6) # Divides the row into two equal columns (6+6=12)
-  ),
-  
-  # Second row: Tabs within a card using navset_card_tab
-  card(
-    full_screen = TRUE,# Optional: allows the card to go full screen
-    height = "1000px", # Sets a fixed height
-    navset_card_tab(
-      nav_panel("Stacks",
-                actionButton("add_data_button", "Add Stack", class = "btn-sm", width = '20%'),
-                DTOutput("stack_table")  #(dynamic table)
-                
-      ),
-      nav_panel("Rads",
-                actionButton("add_rad_button", "Add Radionuclide", class = "btn-sm", width = '20%'),
-                tags$head(
-                  tags$style(HTML("
-      /* Add a 1px solid black border to all table cells and headers */
-      .dataTable td, .dataTable th {
-        border: 1px solid black;
-      }
-        /* Change background and text color of all DT buttons */
+    ###### LEVEL 2
+    nav_panel("level 2/3",
+              # Map and Plot
+              layout_columns(
+                card(
+                  full_screen = TRUE,
+                  height = "500px",
+                  card_header("Map"),
+                  leafletOutput("map_l2")
+                ),
+                card(
+                  full_screen = TRUE,
+                  height = "500px",
+                  card_header("Plot"),
+                  plotlyOutput(outputId = "graph_l2")
+                ),
+                col_widths = c(6, 6)
+              ),
+              card(
+                full_screen = TRUE,
+                height = "500px",
+                navset_card_tab(
+                  nav_panel("Stacks",
+                            tags$div(
+                              class = "d-flex gap-2 mb-1",
+                              actionButton("add_data_button", "Add Stack", class = "btn-sm"),
+                              actionButton("delete_stack_button", "Delete Selected Row", class = "btn-sm")
+                            ),
+                            # Footnote under the buttons
+                            tags$small(
+                              class = "text-muted",
+                              "Note: For Level 2, use same distance values for Source Distance, Veg Distance, and Cow Distance."
+                            ),
+                            DTOutput("stack_table")
+                  ),
+                  nav_panel("Emissions",
+                            # Buttons for Level 2 emissions table
+                            tags$div(class = "d-flex gap-2 mb-2",
+                                     actionButton("add_rad_button_l2", "Add Radionuclide", class = "btn-sm"),
+                                     actionButton("delete_rad_button_l2", "Delete Selected Row", class = "btn-sm")
+                            ),
+                            tags$head(
+                              tags$style(HTML("
+      .dataTable td, .dataTable th { border: 1px solid black; }
       .dt-button {
-        background-color: #f0f0f0 !important; /* White background */
-        color: black !important;             /* Black text */
-        border: 1px solid #000500 !important; /* Black border */
+        background-color: #f0f0f0 !important;
+        color: black !important;
+        border: 1px solid #000500 !important;
       }
     "))
-                ),
-                DTOutput("rad_table")  #(dynamic table)
-      ),
-      nav_panel("Doses",
-                tags$head(
-                  tags$style(HTML("
-      /* Add a 1px solid black border to all table cells and headers */
-      .dataTable td, .dataTable th {
-        border: 1px solid black;
-      }
-       /* Change background and text color of all DT buttons */
-      .dt-button {
-        background-color: #f0f0f0 !important; /* White background */
-        color: black !important;             /* Black text */
-        border: 1px solid #000500 !important; /* Black border */
-      }
-    "))
-                ),
-                
-                DTOutput("dose_table")  #(dynamic table)
-      ),
-      nav_panel("Export Data",
-                downloadButton("downloadCSVData", "Download .CSV file", class = "btn-sm", width = '20%'),
-                downloadButton("downloadReport", "Generate HTML Report", class = "btn-sm", width = '20%')
-      )
+                            ),
+                            DTOutput("rad_table_l2")
+                  ),
+                  nav_panel("Diagnostic Results",
+                            tags$head(tags$style(HTML("
+              .dataTable td, .dataTable th { border: 1px solid black; }
+              .dt-button {
+                background-color: #f0f0f0 !important;
+                color: black !important;
+                border: 1px solid #000500 !important;
+              }"))),
+                            DTOutput("dose_table")
+                  ),
+                  nav_panel("Compliance Summary",
+                            textOutput("fraction_display_l2"),
+                            textOutput("fraction_display_i_l2")
+                  ),
+                  nav_panel("Export Data",
+                            downloadButton("downloadCSVData", "Download .CSV file", class = "btn-sm", width = '20%'),
+                            downloadButton("downloadReport", "Generate HTML Report", class = "btn-sm", width = '20%')
+                  )
+                )
+              )
+    ),
+    
+    # ---- RADON TAB: Button + summary output ----
+    nav_panel("Radon",
+              h4("Radon content goes here."),
+              tags$div(class = "d-flex gap-2 mb-2",
+                       actionButton("radon_params_btn", "Set Radon Parameters", class = "btn-sm")
+              ),
+              tags$small(class = "text-muted",
+                         "Enter and save Radon stack parameters here for use in downstream calculations."
+              ),
+              textOutput("radon_params_summary")
     )
   )
 )
 
 server <- function(input, output, session) {
   
-
-# STACKS ------------------------------------------------------------------
-  
-  # Reactive value to store the data frame
+  # ========== STACKS ==========
   stack_data <- reactiveVal(stacks)
   
-  # Render the data table
   output$stack_table <- renderDT({
-    datatable(stack_data(), 
-              class = 'cell-border stripe', # Add the 'cell-borders' class
-              extensions = 'Buttons',
-              options = list( 
-                ordering = FALSE,  # Disables sorting functionality on all columns
-                searching = FALSE, # Removes the global search box
-                info = FALSE,       # Removes the "Showing X to Y of Z entries" display
-                lengthChange = FALSE, # This removes the 'Show entries' dropdown
-                dom = 'Blfti', # Excludes 'p' for pagination
-                columnDefs = list(list(className = 'dt-center', targets = "_all")),
-                rownames = FALSE,
-                pageLength = -1,      # Shows all rows (-1)
-                paging = FALSE,
-                filter = "top",
-                buttons = c('copy', 'csv', 'excel', 'pdf'), # Specify the export buttons
-                # Optional: customize export options, e.g.
-                exportOptions = list(
-                  columns = ':visible' # Only export visible columns
-                )))
+    datatable(
+      stack_data(), 
+      class = 'cell-border stripe',
+      extensions = 'Buttons',
+      selection = 'single',            
+      options = list( 
+        ordering = FALSE,
+        searching = FALSE,
+        info = FALSE,
+        lengthChange = FALSE,
+        dom = 'Blfti',
+        columnDefs = list(list(className = 'dt-center', targets = "_all")),
+        rownames = FALSE,
+        pageLength = -1,
+        paging = FALSE,
+        filter = "top",
+        buttons = c('copy', 'csv', 'excel', 'pdf'),
+        exportOptions = list(columns = ':visible')
+      )
+    )
   })
   
-  # Observe the "Add Row" button click to show the modal
   observeEvent(input$add_data_button, {
     showModal(
       modalDialog(
-        title = "Enter New Row Data",
+        title = "Enter New Stack Data",
         textInput("input_ID", "Stack ID:", ""),
         numericInput("input_RH", "Release Height:", value = NULL, min = 0),
         numericInput("input_BH", "Building Height:", value = NULL, min = 0),
@@ -260,98 +308,93 @@ server <- function(input, output, session) {
         numericInput("input_VD", "Veg Distance:", value = NULL, min = 0),
         numericInput("input_CD", "Cow Distance:", value = NULL, min = 0),
         numericInput("input_WS", "Mean WS:", value = NULL, min = 0),
+        
+        # Footnote inside the modal
+        tags$small(
+          class = "text-muted",
+          "Note: For Level 2, use same distance values for Source Distance, Veg Distance, and Cow Distance."
+        ),
+        
         footer = tagList(
           actionButton("save_btn", "Save"),
           modalButton("Cancel")
-        )
+        ),
+        easyClose = TRUE
       )
     )
   })
   
-  
-  # Observe the "Save" button click within the modal
   observeEvent(input$save_btn, {
-    # Get the current data
     current_data <- stack_data()
     
-    # Create the new row
     new_row <- data.frame(
-      `Stack ID` = input$input_ID,
-      `Release Height` = input$input_RH,
-      `Building Height` = input$input_BH,
-      `Building Width` = input$input_BW,
-      `Source Distance` = input$input_SD,
-      `Veg Distance` = input$input_VD,
-      `Cow Distance` = input$input_CD,
-      `Mean WS`= input$input_WS,
-
-      stringsAsFactors = FALSE
+      Stack.ID = input$input_ID,
+      Release.Height = input$input_RH,
+      Building.Height = input$input_BH,
+      Building.Width = input$input_BW,
+      Source.Distance = input$input_SD,
+      Veg.Distance = input$input_VD,
+      Cow.Distance = input$input_CD,
+      Mean.WS = input$input_WS,
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     )
-    # Append the new row using bind_rows for safety with types
+    
     updated_data <- bind_rows(current_data, new_row)
     cleaned_data <- updated_data[rowSums(is.na(updated_data)) < ncol(updated_data), ]
-
-    
-    # Update the reactive value, which automatically re-renders the table
     stack_data(cleaned_data)
-    print(stack_data())
-    
-    
-    # Close the modal
     removeModal()
   })
-
- 
   
-  
-  # RADS ------------------------------------------------------------------
-  
-  # Reactive value to store the data frame
-  rad_data <- reactiveVal(rads)
-  
-  # Render the data table
-  output$rad_table <- renderDT({
-   tab <-  datatable(rad_data(), 
-                     class = 'cell-border stripe', # Add the 'cell-borders' class
-                     extensions = 'Buttons',
-                     options = list( 
-                       ordering = FALSE,  # Disables sorting functionality on all columns
-                       searching = FALSE, # Removes the global search box
-                       info = FALSE,       # Removes the "Showing X to Y of Z entries" display
-                       lengthChange = FALSE, # This removes the 'Show entries' dropdown
-                       dom = 'Blfti', # Excludes 'p' for pagination
-                       columnDefs = list(list(className = 'dt-center', targets = "_all")),
-                       rownames = FALSE,
-                       pageLength = -1,      # Shows all rows (-1)
-                       paging = FALSE,
-                       filter = "top",
-                       buttons = c('copy', 'csv', 'excel', 'pdf'), # Specify the export buttons
-                       # Optional: customize export options, e.g.
-                       exportOptions = list(
-                         columns = ':visible' # Only export visible columns
-                       )))
-   tab
+  observeEvent(input$delete_stack_button, {
+    sel <- input$stack_table_rows_selected
+    if (is.null(sel) || length(sel) == 0) {
+      showModal(modalDialog(
+        title = "No row selected",
+        "Click a row in the Stacks table to select it, then press 'Delete Selected Row'.",
+        easyClose = TRUE
+      ))
+    } else {
+      current <- stack_data()
+      # Remove the selected row
+      updated <- current[-sel, , drop = FALSE]
+      # Drop any all-NA template rows
+      cleaned <- updated[rowSums(is.na(updated)) < ncol(updated), , drop = FALSE]
+      stack_data(cleaned)
+    }
   })
-
   
-  # Observe the "Add Row" button click to show the modal
+  
+  # ========== RADS (POSSESSION) ==========
+  rad_data <- reactiveVal(rads)
+  rad_sum_possession <- reactiveVal(xsum)
+  i_sum_possession <- reactiveVal(xsum)
+  
+  output$rad_table <- renderDT({
+    datatable(
+      rad_data(),
+      class = 'cell-border stripe',
+      extensions = 'Buttons',
+      selection = 'single',
+      options = list(
+        ordering = FALSE, searching = FALSE, info = FALSE, lengthChange = FALSE,
+        dom = 'Blfti',
+        columnDefs = list(list(className = 'dt-center', targets = "_all")),
+        rownames = FALSE,
+        pageLength = -1, paging = FALSE, filter = "top",
+        buttons = c('copy', 'csv', 'excel', 'pdf'),
+        exportOptions = list(columns = ':visible')
+      )
+    )
+  })
+  
   observeEvent(input$add_rad_button, {
     showModal(
       modalDialog(
         title = "Enter New Radionuclide Data",
-        textInput("input_ID", "Stack ID:", ""),
-        selectInput(
-          inputId = "input_RN",
-          label = "Radionuclide:",
-          choices = unique(long_rads$Radionuclide),
-          selected = NULL
-        ),
-        selectInput(
-          inputId = "input_TYPE",
-          label = "Type:",
-          choices = unique(long_rads$Type),
-          selected = NULL
-        ),
+        textInput("input_STACK", "Stack ID:", ""),
+        selectInput("input_RN", "Radionuclide:", choices = unique(long_rads$Radionuclide), selected = NULL),
+        selectInput("input_TYPE", "Type:", choices = unique(long_rads$Type), selected = NULL),
         numericInput("input_EMISSION", "Emission:", value = NULL, min = 0),
         footer = tagList(
           actionButton("save_rad_btn", "Save"),
@@ -361,357 +404,650 @@ server <- function(input, output, session) {
     )
   })
   
+  observeEvent(input$delete_rad_button, {
+    sel <- input$rad_table_rows_selected
+    if (is.null(sel) || length(sel) == 0) {
+      showModal(modalDialog(
+        title = "No row selected",
+        "Click a row in the table to select it, then press 'Delete Selected Row'.",
+        easyClose = TRUE
+      ))
+    } else {
+      current <- rad_data()
+      updated <- current[-sel, , drop = FALSE]
+      cleaned <- updated[rowSums(is.na(updated)) < ncol(updated), , drop = FALSE]
+      rad_data(cleaned)
+      
+      if (nrow(cleaned) == 0) {
+        rad_sum_possession(data.frame(Fraction = 0))
+        i_sum_possession(data.frame(Fraction = 0))
+      } else {
+        temp <- cleaned
+        temp$element <- substr(temp$Radionuclide, 1, 1)
+        iodine_data <- subset(temp, element == "I")
+        rad_sum_possession(data.frame(Fraction = sum(temp$Fraction)))
+        i_sum_possession(data.frame(Fraction = sum(iodine_data$Fraction)))
+      }
+    }
+  })
   
-  
-  # Observe the "Save" button click within the modal
+  # CHANGED: safer allowance lookup and fraction calc
   observeEvent(input$save_rad_btn, {
-    # Get the current data
     current_data <- rad_data()
-  
     
-    # Create the new row
+    allow_row <- subset(long_rads, Type == input$input_TYPE & Radionuclide == input$input_RN)
+    if (nrow(allow_row) == 0 || is.na(allow_row$Allowance[1])) {
+      showModal(modalDialog(
+        title = "No matching allowance",
+        "No allowance found for that Radionuclide and Type. Please check your selection.",
+        easyClose = TRUE
+      ))
+      return(invisible(NULL))
+    }
+    allow_val <- allow_row$Allowance[1]
+    
     new_row <- data.frame(
-      `Stack ID` = input$input_ID,
-      `Radionuclide` = input$input_RN,
-      `Type` = input$input_TYPE,
-      `Emission` = input$input_EMISSION,
-      `Allowance` = subset(long_rads, Type == input$input_TYPE & Radionuclide == input$input_RN)[1,3],
-      `Percent` = round((input$input_EMISSION/(subset(long_rads, Type == input$input_TYPE & Radionuclide == input$input_RN)[1,3]) * 100),2),
-
-      stringsAsFactors = FALSE
+      Stack.ID = input$input_STACK,
+      Radionuclide = input$input_RN,
+      Type = input$input_TYPE,
+      Emission = input$input_EMISSION,
+      Allowance = allow_val,
+      Fraction = round((input$input_EMISSION / allow_val), 5),
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     )
-    print("new_row!")
-    print(new_row)
-    # Append the new row using bind_rows for safety with types
+    
     updated_data <- bind_rows(current_data, new_row)
     cleaned_data <- updated_data[rowSums(is.na(updated_data)) < ncol(updated_data), ]
+    temp <- cleaned_data
+    temp$element <- substr(temp$Radionuclide, 1, 1)
+    iodine_data <- subset(temp, element == "I")
     
-    
-    # Update the reactive value, which automatically re-renders the table
     rad_data(cleaned_data)
-    # Update the reactive value, which automatically re-renders the table
-    print(rad_data())
-    # Close the modal
+    rad_sum_possession(data.frame(Fraction = sum(cleaned_data$Fraction, na.rm = TRUE)))
+    i_sum_possession(data.frame(Fraction = sum(iodine_data$Fraction, na.rm = TRUE)))
     removeModal()
   })
   
+  # CHANGED: Level 2 "Add" button with safe choices and guard for no stacks
+  observeEvent(input$add_rad_button_l2, {
+    sd <- isolate(stack_data())
+    stack_choices <- character(0)
+    if (!is.null(sd) && "Stack.ID" %in% names(sd)) {
+      ids <- sd$`Stack.ID`
+      stack_choices <- unique(ids[!is.na(ids) && nzchar(ids)])
+    }
+    
+    if (length(stack_choices) == 0) {
+      showModal(modalDialog(
+        title = "No stacks found",
+        "Please add at least one Stack in the Stacks tab before adding emissions.",
+        easyClose = TRUE
+      ))
+      return(invisible(NULL))
+    }
+    
+    showModal(
+      modalDialog(
+        title = "Enter New Radionuclide Data",
+        selectInput("input_STACK", "Stack ID:", choices = stack_choices, selected = NULL),
+        selectInput("input_RN", "Radionuclide:", choices = unique(long_rads$Radionuclide), selected = NULL),
+        selectInput("input_TYPE", "Type:", choices = unique(long_rads$Type), selected = NULL),
+        numericInput("input_EMISSION", "Emission:", value = NULL, min = 0),
+        footer = tagList(
+          actionButton("save_rad_btn", "Save"),
+          modalButton("Cancel")
+        )
+      )
+    )
+  })
   
-
-# DOSES -------------------------------------------------------------------
+  observeEvent(input$delete_rad_button_l2, {
+    sel <- input$rad_table_l2_rows_selected
+    if (is.null(sel) || length(sel) == 0) {
+      showModal(modalDialog(
+        title = "No row selected",
+        "Click a row in the Emissions table to select it, then press 'Delete Selected Row'.",
+        easyClose = TRUE
+      ))
+    } else {
+      current <- rad_data()
+      updated <- current[-sel, , drop = FALSE]
+      cleaned <- updated[rowSums(is.na(updated)) < ncol(updated), , drop = FALSE]
+      rad_data(cleaned)
+      
+      # Optional: update possession summaries if you show them in Level 1
+      if (exists("rad_sum_possession") && exists("i_sum_possession")) {
+        if (nrow(cleaned) == 0) {
+          rad_sum_possession(data.frame(Fraction = 0))
+          i_sum_possession(data.frame(Fraction = 0))
+        } else {
+          temp <- cleaned
+          temp$element <- substr(temp$Radionuclide, 1, 1)
+          iodine_data <- subset(temp, element == "I")
+          rad_sum_possession(data.frame(Fraction = sum(temp$Fraction, na.rm = TRUE)))
+          i_sum_possession(data.frame(Fraction = sum(iodine_data$Fraction, na.rm = TRUE)))
+        }
+      }
+    }
+  })
   
-  # Render the data table using the result of the eventReactive expression
+  
+  # Level 2 emissions table 
+  output$rad_table_l2 <- renderDT({
+    datatable(
+      rad_data(),
+      class = 'cell-border stripe',
+      extensions = 'Buttons',
+      selection = 'single',
+      options = list(
+        ordering = FALSE,
+        searching = FALSE,
+        info = FALSE,
+        lengthChange = FALSE,
+        dom = 'Blfti',
+        columnDefs = list(list(className = 'dt-center', targets = "_all")),
+        rownames = FALSE,
+        pageLength = -1,
+        paging = FALSE,
+        filter = "top",
+        buttons = c('copy', 'csv', 'excel', 'pdf'),
+        exportOptions = list(columns = ':visible')
+      )
+    )
+  })
+  
+  # ========== BUILD COMPLETE DATA FRAME (Level 1 summary) ==========
+  output$sums <- renderDT({
+    datatable(rad_sum_possession(), options = list(dom = 't'))
+  })
+  
+  combined_data <- reactive({
+    df <- rad_data()
+    req(nrow(df) > 0)
+    cleaned <- df[rowSums(is.na(df[, -1, drop = FALSE])) < ncol(df[, -1, drop = FALSE]), ]
+    sum(cleaned$Fraction)
+  })
+  
+  # ========== LEVEL 2: Dose-by-distance calculations ==========
+  rad_sum_dose <- reactiveVal(data.frame(total = 0))
+  i_sum_dose   <- reactiveVal(data.frame(total = 0))
+  
+  combined_data_l2 <- reactive({
+    s <- stack_data() %>% make_syntactic()
+    r <- rad_data()   %>% make_syntactic()
+    
+    # Remove fully NA rows
+    s <- s[rowSums(is.na(s)) < ncol(s), , drop = FALSE]
+    r <- r[rowSums(is.na(r)) < ncol(r), , drop = FALSE]
+    
+    # Require keys to exist and non-empty data
+    req("Stack.ID" %in% names(s), "Stack.ID" %in% names(r))
+    merged <- merge(s, r, by = "Stack.ID")
+    req(nrow(merged) > 0)
+    
+    # Expand to distances (5..2000 by 5) per row without uncount()
+    n_rows <- nrow(merged)
+    df <- merged %>%
+      dplyr::slice(rep(dplyr::row_number(), each = 400)) %>%
+      dplyr::mutate(Source.Distance = rep(seq(5, 2000, 5), times = n_rows)) %>%
+      dplyr::mutate(
+        area  = Building.Width * Building.Height,
+        xcrit = 2.5 * sqrt(area),
+        xarea = pmin(Building.Width, Building.Height),
+        sigmaz = (0.06 * Source.Distance) / sqrt(1.0 + (0.0015 * Source.Distance)),
+        capsig = sqrt((sigmaz^2) + (area / 3.14)),
+        pp     = 2.032 / (Source.Distance * capsig),
+        conc   = ifelse(
+          Source.Distance < xcrit,
+          (0.25 * as.numeric(Emission)) / (3.14 * Mean.WS * 1.0 * xarea),
+          (0.25 * as.numeric(Emission) * pp) / Mean.WS
+        )
+      )
+    
+    # Join dose coefficients
+    df <- df %>% dplyr::left_join(doses_info, by = "Radionuclide")
+    
+    # Calculate doses
+    df <- df %>%
+      dplyr::mutate(
+        airconc = conc,
+        dose  = WBdose.y    * conc,   # columns must exist in doses_info (aligned earlier)
+        vdose = VegDose     * conc,
+        cdose = CowMilkDose * conc,
+        total = dose + vdose + cdose
+      )
+    
+    df
+  })
+  
+  # Dose table (full)
   output$dose_table <- renderDT({
-    req(dose_data())
-    datatable(dose_data(), 
-              class = 'cell-border stripe', # Add the 'cell-borders' class
+    req(combined_data_l2())
+    datatable(combined_data_l2(),
+              class = 'cell-border stripe',
               extensions = 'Buttons',
-              options = list( 
-                ordering = FALSE,  # Disables sorting functionality on all columns
-                searching = FALSE, # Removes the global search box
-                info = FALSE,       # Removes the "Showing X to Y of Z entries" display
-                lengthChange = FALSE, # This removes the 'Show entries' dropdown
-                dom = 'Blfti', # Excludes 'p' for pagination
+              options = list(
+                ordering = FALSE, searching = FALSE, info = FALSE, lengthChange = FALSE,
+                dom = 'Blfti',
                 columnDefs = list(list(className = 'dt-center', targets = "_all")),
                 rownames = FALSE,
-                pageLength = -1,      # Shows all rows (-1)
-                paging = FALSE,
-                filter = "top",
-                buttons = c('copy', 'csv', 'excel', 'pdf'), # Specify the export buttons
-                # Optional: customize export options, e.g.
-                exportOptions = list(
-                  columns = ':visible' # Only export visible columns
-                )
-              ))
+                pageLength = -1, paging = FALSE, filter = "top",
+                buttons = c('copy', 'csv', 'excel', 'pdf'),
+                exportOptions = list(columns = ':visible')
+              )
+    )
   })
   
-  
-  
-  
-  
-# BUILD COMPLETE DATA FRAME   ----------------------------------------------
-
- 
-    
-    combined_data <- reactive({
-      req(rad_data())
-      # Use bind_rows to stack dataframes vertically (assumes same column names)
-      combined_df <-  merge(stack_data(), rad_data(), by= "Stack.ID")
-
-      # Remove rows with any NA values
-      cleaned <- as.data.frame(combined_df[rowSums(is.na(combined_df[, -1])) < ncol(combined_df[, -1]), ])
-      print(cleaned)
-      
-      
-      #distances
-      rep_length <- nrow(cleaned)
-      receptors <- seq(5,2000,5)
-      
-      rads_distances <- cleaned %>%
-        mutate(Source.Distance = NA) %>%
-        mutate(row_id = row_number()) %>%
-        uncount(400) %>% # Duplicates each row 400 times
-        group_by(row_id) %>%
-        #mutate(across(-Radionuclide, ~ ifelse(row_number() > 1, NA, .))) %>%
-        ungroup() %>%
-        mutate(Source.Distance = rep(seq(5,2000,5), times = rep_length))%>%
-        select(-row_id) %>% mutate(
-        area = Building.Width * Building.Height,
-        xcrit = 2.5 * sqrt(area),
-        xarea = pmin(Building.Width,Building.Height),
-        sigmaz  = (0.06*Source.Distance)/sqrt(1.0+(0.0015*Source.Distance)),
-        capsig  =  sqrt((sigmaz^2) + (area/3.14)),
-        pp  =   round(2.032 / (Source.Distance*capsig),2), 
-        conc = round(ifelse(Source.Distance < xcrit, (0.25*as.numeric(Emission))/(3.14*Mean.WS*1.0*xarea),
-                            (0.25*as.numeric(Emission)*pp) / Mean.WS),2)
-        #note:conc will be INF if WS = 0...
-      )
-
-      print(head(rads_distances))
-      rad_distances_doses <- left_join(rads_distances, doses_info, by = "Radionuclide")
-
-      # For each distance, calculate a total, inhalation, vegetable, and a cowmilk dose
-      rad_distances_doses$dose <- rad_distances_doses$WBdose.y * rad_distances_doses$conc
-      rad_distances_doses$vdose <- rad_distances_doses$VegDose * rad_distances_doses$conc
-      rad_distances_doses$cdose <- rad_distances_doses$CowMilkDose * rad_distances_doses$conc
-      rad_distances_doses$total <-   rad_distances_doses$dose +  rad_distances_doses$vdose + rad_distances_doses$cdose
-
-      return(rad_distances_doses)
-    
-    
-    })
-  
-  
-  
-  
-  # make cut-down dose-specific version
+  # Cut-down dose-specific version for display/export
   dose_data <- reactive({
-    # Use bind_rows to stack dataframes vertically (assumes same column names)
-    full_data <-  combined_data()
-    df_subset <- full_data %>% select(`Stack.ID`, `Radionuclide`, `Type`, `Source.Distance`, `dose`, `vdose`, `cdose`, `total`)
-    
-    print(df_subset)
-    return(df_subset)
+    full_data_l2 <- combined_data_l2()
+    full_data_l2 %>%
+      select(Stack.ID, Radionuclide, Source.Distance, airconc, dose, vdose, cdose, total)
   })
   
+  # Specific receptors (MEI / veg / cow distances) for compliance
+  distance_data <- reactive({
+    s <- stack_data() %>% make_syntactic()
+    r <- rad_data() %>% make_syntactic()
+    
+    s <- s[rowSums(is.na(s)) < ncol(s), , drop = FALSE]
+    r <- r[rowSums(is.na(r)) < ncol(r), , drop = FALSE]
+    
+    req("Stack.ID" %in% names(s), "Stack.ID" %in% names(r))
+    xrads <- merge(s, r, by = "Stack.ID")
+    req(nrow(xrads) > 0)
+    
+    xrads$area  <- xrads$Building.Width * xrads$Building.Height
+    xrads$xcrit <- 2.5 * sqrt(xrads$area)
+    xrads$xarea <- pmin(xrads$Building.Width, xrads$Building.Height)
+    
+    # MEI distance
+    xrads$sigmaz  <- (0.06 * xrads$Source.Distance)/sqrt(1.0 + (0.0015 * xrads$Source.Distance))
+    xrads$capsig  <- sqrt((xrads$sigmaz^2) + (xrads$area/3.14))
+    xrads$pp      <- 2.032 / (xrads$Source.Distance * xrads$capsig)
+    xrads$conc.mei <- ifelse(
+      xrads$Source.Distance < xrads$xcrit,
+      (0.25 * as.numeric(xrads$Emission))/(3.14 * xrads$Mean.WS * 1.0 * xrads$xarea),
+      (0.25 * as.numeric(xrads$Emission) * xrads$pp) / xrads$Mean.WS
+    )
+    
+    # Veg receptor
+    xrads$sigmaz  <- (0.06 * xrads$Veg.Distance)/sqrt(1.0 + (0.0015 * xrads$Veg.Distance))
+    xrads$capsig  <- sqrt((xrads$sigmaz^2) + (xrads$area/3.14))
+    xrads$pp      <- 2.032 / (xrads$Veg.Distance * xrads$capsig)
+    xrads$conc.veg <- ifelse(
+      xrads$Veg.Distance < xrads$xcrit,
+      (0.25 * as.numeric(xrads$Emission))/(3.14 * xrads$Mean.WS * 1.0 * xrads$xarea),
+      (0.25 * as.numeric(xrads$Emission) * xrads$pp) / xrads$Mean.WS
+    )
+    
+    # Cow receptor
+    xrads$sigmaz  <- (0.06 * xrads$Cow.Distance)/sqrt(1.0 + (0.0015 * xrads$Cow.Distance))
+    xrads$capsig  <- sqrt((xrads$sigmaz^2) + (xrads$area/3.14))
+    xrads$pp      <- 2.032 / (xrads$Cow.Distance * xrads$capsig)
+    xrads$conc.cow <- ifelse(
+      xrads$Cow.Distance < xrads$xcrit,
+      (0.25 * as.numeric(xrads$Emission))/(3.14 * xrads$Mean.WS * 1.0 * xrads$xarea),
+      (0.25 * as.numeric(xrads$Emission) * xrads$pp) / xrads$Mean.WS
+    )
+    
+    xrad_doses <- left_join(xrads, doses_info, by = "Radionuclide")
+    
+    xrad_doses$airconc <- xrad_doses$conc.mei
+    xrad_doses$dose    <- xrad_doses$WBdose.y   * xrad_doses$conc.mei
+    xrad_doses$vdose   <- xrad_doses$VegDose    * xrad_doses$conc.veg
+    xrad_doses$cdose   <- xrad_doses$CowMilkDose * xrad_doses$conc.cow
+    xrad_doses$total   <- xrad_doses$dose + xrad_doses$vdose + xrad_doses$cdose
+    
+    # Update Level 2 summary reactives
+    total_sum <- sum(xrad_doses$total, na.rm = TRUE)
+    temp <- xrad_doses
+    temp$element <- substr(temp$Radionuclide, 1, 1)
+    iodine_data <- subset(temp, element == "I")
+    iodine_sum <- sum(iodine_data$total, na.rm = TRUE)
+    
+    rad_sum_dose(data.frame(total = total_sum))
+    i_sum_dose(data.frame(total = iodine_sum))
+    
+    xrad_doses
+  })
   
-    
-    # Render the interactive plot using renderPlotly and ggplotly
-    output$graph <- renderPlotly({
-      # Use req() to ensure data is available before plotting
-      req(combined_data())
-      # Call the reactive expression like a function: combined_data()
-      p <- ggplot(combined_data(), aes(x = Source.Distance, y = total, color = Radionuclide)) +
-        geom_point(alpha = 0.6) +
-        labs(title = "Combined Reactive Data Plot", color = "Source Data") +
-        theme_classic()+ 
-        xlab("Distance from Source (m)")+
-        ylab("Total Dose (mrem/y)")+
-        theme(
-          panel.background = element_rect(fill = "white", color = NA),
-          panel.border = element_rect(color = "black", fill = NA, size = 1),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          legend.background = element_rect(fill = "white", color = NA),
-          legend.key = element_rect(fill = "white", color = NA)
-        ) +
-        labs(color = "Radionuclides")
-      
-      ggplotly(p) # Transform the ggplot object into an interactive plotly object
-    })
+  compliance_data <- reactive({
+    full_data <- distance_data()
+    full_data %>% select(Stack.ID, Radionuclide, Source.Distance, airconc, dose, vdose, cdose, total)
+  })
   
-    
-
-# Data Downloads ----------------------------------------------------------
-
-    # Handler for the CSV download button
-    output$downloadCSVData <- downloadHandler(
-      filename = function() {
-        # Dynamic filename generation
-        paste0("COMPLY_", Sys.Date(), ".csv") 
-      },
-      content = function(file) {
-        # Write the content to a temporary file Shiny provides
-        write.csv(combined_data(), file, row.names = FALSE) 
-      }
-    )    
+  # ========== COMPLIANCE SUMMARIES ==========
+  output$fraction_display <- renderText({
+    selected_row <- rad_sum_possession()
+    selected_age <- round(selected_row$Fraction, 2)
+    paste0("Stack possession fraction is ", selected_age,
+           " times the allowable amount given in the possession table.")
+  })
   
-    ##### HTML Report
-    # Reactive data for both app display and report
-    report_data <-  reactive({combined_data()})
-    report_plot <- reactive({
-     p <-  ggplot(combined_data(), aes(x = Source.Distance, y = total, color = Radionuclide)) +
-        geom_point(alpha = 0.6) +
-        labs(title = "Combined Reactive Data Plot", color = "Source Data") +
-        theme_classic()+
-        xlab("Distance from Source (m)")+
-        ylab("Total Dose (mrem/y)")+
-        theme(
-          panel.background = element_rect(fill = "white", color = NA),
-          panel.border = element_rect(color = "black", fill = NA, size = 1),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          legend.background = element_rect(fill = "white", color = NA),
-          legend.key = element_rect(fill = "white", color = NA)
-        ) +
-        labs(color = "Radionuclides")
-
-      ggplotly(p) # Transform the ggplot object into an interactive plotly object
-    })
-#     
-#     
-    output$HTML_plot <- renderPlotly({ report_plot() })
-    output$HTML_table <- renderDT({ report_data() })
-
-
-
-    output$downloadReport <- downloadHandler(
-      filename = function() { paste0("report_", Sys.Date(), ".html") },
-      content = function(file) {
-        # Use a temporary directory for the .Rmd to ensure write permissions
-        temp_rmd <- file.path(tempdir(), "COMPLY_Output.Rmd")
-        file.copy("COMPLY_Output.Rmd", temp_rmd, overwrite = TRUE)
-
-        # Pass reactive objects to the R Markdown template
-        rmarkdown::render(temp_rmd, output_file = file,
-                          params = list(report_plot = report_plot(), report_data = report_data()),
-                          envir = new.env(parent = globalenv())
-        )
-      })
-
-
+  output$fraction_display_i <- renderText({
+    selected_row <- i_sum_possession()
+    selected_age <- round(selected_row$Fraction, 2)
+    paste0("Total iodine possession fraction is ", selected_age, ".")
+  })
+  
+  output$fraction_display_l2 <- renderText({
+    s <- rad_sum_dose()
+    val <- if (!is.null(s$total)) s$total else NA_real_
+    paste0("Sum of total dose across modeled receptors is ", signif(val, 4), " mrem/y.")
+  })
+  
+  output$fraction_display_i_l2 <- renderText({
+    s <- i_sum_dose()
+    val <- if (!is.null(s$total)) s$total else NA_real_
+    paste0("Sum of iodine-only dose across modeled receptors is ", signif(val, 4), " mrem/y.")
+  })
+  
+  # ========== PLOTS ==========
+  output$graph <- renderPlotly({
+    df <- as.data.frame(rad_data())
     
+    # keep only valid rows
+    df <- df %>%
+      dplyr::filter(
+        !is.na(Fraction),
+        is.finite(Fraction),
+        !is.na(Radionuclide),
+        nzchar(Radionuclide)
+      )
     
+    if (nrow(df) == 0) {
+      return(plotly::plotly_empty(type = "scatter", mode = "markers") |>
+               layout(title = "No valid fraction data to plot yet."))
+    }
     
-
-# MAPPING -----------------------------------------------------------------
-
-    # Reactive expression to perform geocoding
-    geocoded_address <- eventReactive(input$geocode_button, {
-      if (input$Latitude == "") {
-        
-        full_address <- input$address_input
-        some_addresses <- tibble::tribble(
-          ~name,                  ~addr,
-          "company",          full_address
-        )
-        print(some_addresses)
-        
-        # Use tidygeocoder to geocode the address string
-        geocode_result <- some_addresses %>%
-          geocode(addr, method = 'osm', lat = latitude , long = longitude)
-        print(geocode_result)
-        
-        # Check if geocoding was successful
-        if (nrow(geocode_result) > 0 && !is.na(geocode_result$latitude) && !is.na(geocode_result$longitude)) {
-          geocode_result
-        } else {
-          showModal(modalDialog(
-            title = "Geocoding Error",
-            "Could not find coordinates for the entered address. Please check the address and try again.",
-            easyClose = TRUE
-          ))
-          NULL
-        }
+    # aggregate by radionuclide (if multiple rows per RN exist)
+    agg <- df %>%
+      dplyr::group_by(Radionuclide) %>%
+      dplyr::summarise(Fraction = sum(Fraction, na.rm = TRUE), .groups = "drop")
+    
+    plotly::plot_ly(
+      data = agg,
+      x = ~Radionuclide,
+      y = ~Fraction,
+      type = "bar",
+      hoverinfo = "x+y"
+    ) |>
+      layout(
+        title = "Possession Fraction by Radionuclide",
+        xaxis = list(title = "Radionuclide"),
+        yaxis = list(title = "Fraction"),
+        showlegend = FALSE
+      )
+  })
+  
+  # In the report section
+  report_plot <- reactive({
+    df <- as.data.frame(rad_data())
+    
+    df <- df %>%
+      dplyr::filter(
+        !is.na(Fraction),
+        is.finite(Fraction),
+        !is.na(Radionuclide),
+        nzchar(Radionuclide)
+      )
+    
+    if (nrow(df) == 0) {
+      return(plotly::plotly_empty(type = "scatter", mode = "markers") |>
+               layout(title = "Possession Fraction Plot"))
+    }
+    
+    agg <- df %>%
+      dplyr::group_by(Radionuclide) %>%
+      dplyr::summarise(Fraction = sum(Fraction, na.rm = TRUE), .groups = "drop")
+    
+    plotly::plot_ly(
+      data = agg,
+      x = ~Radionuclide,
+      y = ~Fraction,
+      type = "bar",
+      hoverinfo = "x+y"
+    ) |>
+      layout(
+        title = "Possession Fraction by Radionuclide",
+        xaxis = list(title = "Radionuclide"),
+        yaxis = list(title = "Fraction"),
+        showlegend = FALSE
+      )
+  })
+  
+  output$graph_l2 <- renderPlotly({
+    # Get the computed L2 data frame
+    df <- as.data.frame(combined_data_l2())
+    
+    # If the reactive returns NULL early, bail out
+    if (is.null(df)) {
+      return(plotly::plotly_empty(type = "scatter", mode = "markers") |>
+               layout(title = "No data to plot yet."))
+    }
+    
+    # Coerce types (defensive) and keep only valid rows
+    df <- df %>%
+      dplyr::mutate(
+        Source.Distance = suppressWarnings(as.numeric(Source.Distance)),
+        total           = suppressWarnings(as.numeric(total))
+      ) %>%
+      dplyr::filter(
+        !is.na(Source.Distance), is.finite(Source.Distance),
+        !is.na(total),           is.finite(total),
+        !is.na(Radionuclide),    nzchar(Radionuclide)
+      ) %>%
+      dplyr::arrange(Radionuclide, Source.Distance)
+    
+    if (nrow(df) == 0) {
+      return(plotly::plotly_empty(type = "scatter", mode = "markers") |>
+               layout(title = "No valid dose data to plot yet."))
+    }
+    
+    plotly::plot_ly(
+      data  = df,
+      x     = ~Source.Distance,
+      y     = ~total,
+      color = ~Radionuclide,
+      type  = "scatter",
+      mode  = "markers"      # switch to "lines+markers" if you prefer lines
+    ) |>
+      layout(
+        title = "Dose by Distance",
+        xaxis = list(title = "Distance from Source (m)"),
+        yaxis = list(title = "Total Dose (mrem/y)")
+      )
+  })
+  
+  # ========== REPORT DATA ==========
+  report_meta <- reactive({
+    res <- tryCatch(geocoded_address(), error = function(e) NULL)
+    lat_in <- suppressWarnings(as.numeric(input$Latitude))
+    lon_in <- suppressWarnings(as.numeric(input$Longitude))
+    lat <- if (!is.null(res) && !is.null(res$latitude)) as.numeric(res$latitude) else lat_in
+    lon <- if (!is.null(res) && !is.null(res$longitude)) as.numeric(res$longitude) else lon_in
+    list(
+      company_name = input$CompanyName,
+      company_contact = input$CompanyContact,
+      company_contact_email = input$CompanyContactNum,
+      facility_name = input$FacilityName,
+      address = input$address_input,
+      latitude = lat,
+      longitude = lon
+    )
+  })
+  
+  report_data <- reactive({ rad_data() })
+  report_plot <- reactive({
+    p <- ggplot(rad_data(), aes(x = 1, y = Fraction, fill = Radionuclide)) +
+      geom_col(alpha = 0.6) +
+      labs(title = "Possession Fraction Plot", color = "Source Data") +
+      theme_classic() + xlab(" ") + ylab("Fraction") +
+      theme(
+        panel.background = element_rect(fill = "white", color = NA),
+        panel.border = element_rect(color = "black", fill = NA, size = 1),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.background = element_rect(fill = "white", color = NA),
+        legend.key = element_rect(fill = "white", color = NA)
+      ) +
+      labs(color = "Radionuclides")
+    ggplotly(p)
+  })
+  
+  output$HTML_table <- renderDT({ report_data() })
+  output$HTML_plot <- renderPlotly({ report_plot() })
+  
+  output$downloadReport <- downloadHandler(
+    filename = function() { paste0("report_", Sys.Date(), ".html") },
+    content = function(file) {
+      temp_rmd <- file.path(tempdir(), "COMPLY_Output.Rmd")
+      file.copy("COMPLY_Output.Rmd", temp_rmd, overwrite = TRUE)
+      rmarkdown::render(
+        temp_rmd,
+        output_file = file,
+        params = list(
+          report_data = report_data(),
+          report_plot = report_plot(),
+          meta = report_meta()
+        ),
+        envir = new.env(parent = globalenv())
+      )
+    }
+  )
+  
+  # ========== MAPPING ==========
+  geocoded_address <- eventReactive(input$geocode_button, {
+    if (input$Latitude == "") {
+      full_address <- input$address_input
+      some_addresses <- tibble::tribble(~name, ~addr, "company", full_address)
+      geocode_result <- some_addresses %>%
+        geocode(addr, method = 'osm', lat = latitude, long = longitude)
+      if (nrow(geocode_result) > 0 && !is.na(geocode_result$latitude) && !is.na(geocode_result$longitude)) {
+        geocode_result
       } else {
-        latitude <- input$Latitude
-        longitude <- input$Longitude
-        name <- "company"
-        addr <- ""
-        geocode_result <- as.tibble(cbind(name, addr, as.numeric(latitude), as.numeric(longitude)))
-        names(geocode_result) <- c("name","addr","latitude","longitude")
-        print(geocode_result)
+        showModal(modalDialog(
+          title = "Geocoding Error",
+          "Could not find coordinates for the entered address. Please check the address and try again.",
+          easyClose = TRUE
+        ))
+        NULL
       }
-    })
+    } else {
+      latitude <- input$Latitude
+      longitude <- input$Longitude
+      name <- "company"; addr <- ""
+      geocode_result <- tibble::as_tibble(cbind(name, addr, as.numeric(latitude), as.numeric(longitude)))
+      names(geocode_result) <- c("name","addr","latitude","longitude")
+      geocode_result
+    }
+  })
+  
+  output$map <- renderLeaflet({
+    leaflet() %>% addProviderTiles(providers$Esri.WorldTopoMap) %>%
+      setView(lng = -98.5833, lat = 39.8333, zoom = 5)
+  })
+  output$map_l2 <- renderLeaflet({
+    leaflet() %>% addProviderTiles(providers$Esri.WorldTopoMap) %>%
+      setView(lng = -98.5833, lat = 39.8333, zoom = 5)
+  })
+  
+  # Update both maps when a new address is geocoded
+  observe({
+    result <- geocoded_address()
+    if (is.null(result)) return()
+    result$latitude  <- as.numeric(result$latitude)
+    result$longitude <- as.numeric(result$longitude)
+    for (id in c("map", "map_l2")) {
+      leafletProxy(id) %>%
+        clearMarkers() %>%
+        addMarkers(lng = result$longitude, lat = result$latitude, popup = result$addr) %>%
+        setView(lng = result$longitude, lat = result$latitude, zoom = 10)
+    }
+  })
+  
+  output$coords <- renderText({
+    result <- geocoded_address()
+    if (is.null(result)) return("Enter an address and click 'Plot Location'.")
+    result$latitude <- as.numeric(result$latitude)
+    result$longitude <- as.numeric(result$longitude)
+    paste("Latitude:", round(result$latitude, 6), ", Longitude:", round(result$longitude, 6))
+  })
+  
+  # ---- RADON PARAMETERS (stored as numeric reactive values) ----
+  # These can be called later as radon_exit_velocity() and radon_diameter()
+  radon_exit_velocity <- reactiveVal(NA_real_)
+  radon_diameter      <- reactiveVal(NA_real_)
+  
+  # Open the modal when user clicks the button on the Radon tab
+  observeEvent(input$radon_params_btn, {
+    showModal(
+      modalDialog(
+        title = "Radon Stack Parameters",
+        # Use the current saved values (if any) as defaults
+        numericInput(
+          "radon_exit_velocity_input",
+          "Exit velocity (m³/s):",
+          value = radon_exit_velocity(),
+          min = 0,
+          step = 0.01
+        ),
+        numericInput(
+          "radon_diameter_input",
+          "Diameter (m):",
+          value = radon_diameter(),
+          min = 0.0001,   # positive diameter
+          step = 0.01
+        ),
+        footer = tagList(
+          actionButton("save_radon_btn", "Save"),
+          modalButton("Cancel")
+        ),
+        easyClose = TRUE
+      )
+    )
+  })
+  
+  # Validate and save numeric values
+  observeEvent(input$save_radon_btn, {
+    ev <- suppressWarnings(as.numeric(input$radon_exit_velocity_input))
+    d  <- suppressWarnings(as.numeric(input$radon_diameter_input))
     
+    # basic validation
+    if (is.na(ev) || is.na(d) || ev < 0 || d <= 0) {
+      showModal(modalDialog(
+        title = "Invalid values",
+        "Please enter a non-negative exit velocity (m³/s) and a positive diameter (m).",
+        easyClose = TRUE
+      ))
+      return(invisible(NULL))
+    }
     
-    # Render the Leaflet map
-    output$map <- renderLeaflet({
-      # Initialize an empty Leaflet map
-      leaflet() %>%
-        addProviderTiles(providers$Esri.WorldImagery) %>%
-        setView(lng = -98.5833, lat = 39.8333, zoom = 4) # Default view (center of the US)
-    })
-    
-    # Update the map when a new address is geocoded
-    observe({
-      result <- geocoded_address()
-      result$latitude <- as.numeric(result$latitude)
-      result$longitude <- as.numeric(result$longitude)
-      print(result)
-      if (!is.null(result)) {
-        # Clear existing markers
-        leafletProxy("map") %>% clearMarkers()
-        
-        # Add a marker at the new coordinates and center the map
-        leafletProxy("map") %>%
-          addMarkers(
-            lng = result$longitude,
-            lat = result$latitude,
-            popup = result$addr
-          ) %>%
-          setView(
-            lng = result$longitude,
-            lat = result$latitude,
-            zoom = 15
-          )
-      }
-    })
-    
-    # Render the coordinates text
-    output$coords <- renderText({
-      result <- geocoded_address()
-      result$latitude <- as.numeric(result$latitude)
-      result$longitude <- as.numeric(result$longitude)
-      if (!is.null(result)) {
-        paste("Latitude:", round(result$latitude, 6), ", Longitude:", round(result$longitude, 6))
-      } else {
-        "Enter an address and click 'Geocode'."
-      }
-    })    
-
-    # Add heatmap 
-    observeEvent(input$add_heatmap_btn, {
-      req(combined_data())
-      req(geocoded_address())
-      
-      result <- geocoded_address()
-      result$latitude <- as.numeric(result$latitude)
-      result$longitude <- as.numeric(result$longitude)
-      print("heatmap button pressed!")
-      print(result)
-      
-      
-      rad_distances_doses <- combined_data()
-      
-      rad_distances_doses$lat <- result$latitude
-      rad_distances_doses$long <- result$longitude
-      
-      R <- 6378137 # Earth radius in meters
-      lat_rad <- result$latitude * pi / 180
-      rad_distances_doses$new_lat <- rad_distances_doses$lat + (rad_distances_doses$Source.Distance / R) * (180 / pi)
-      rad_distances_doses$new_lon <- rad_distances_doses$long + (rad_distances_doses$Source.Distance / R) * (180 / pi) / cos(lat_rad)
-      print(rad_distances_doses)
-      
-      leafletProxy("map") %>%
-        addHeatmap(
-          data = rad_distances_doses,
-          lng = ~rad_distances_doses$new_lon,
-          lat = ~rad_distances_doses$new_lat,
-          intensity = ~rad_distances_doses$total , # Optional: weighting by magnitude
-          radius = 20,       # Radius of influence in pixels
-          blur = 15,         # Blur effect
-          max = 0.05
-        )
-      
-    })
-
-
+    radon_exit_velocity(ev)
+    radon_diameter(d)
+    removeModal()
+  })
+  
+  # Small summary shown on the Radon tab
+  output$radon_params_summary <- renderText({
+    ev <- radon_exit_velocity()
+    d  <- radon_diameter()
+    if (is.na(ev) || is.na(d)) {
+      "No radon parameters saved yet."
+    } else {
+      paste0(
+        "Saved Radon parameters — Exit velocity: ",
+        signif(ev, 6), " m³/s; Diameter: ",
+        signif(d, 6), " m."
+      )
+    }
+  })
 }
 
-
 # Define the viewer with specific width and height (in pixels)
-vwr <- dialogViewer('COMPLY', width = 3200, height = 7400)
-# 
-# # Run the app using runGadget and the defined viewer
-#
+vwr <- dialogViewer('COMPLY v2.0', width = 3200, height = 7400)
 runGadget(shinyApp(ui = ui, server = server), viewer = vwr)
+#shinyApp(ui, server)
+
