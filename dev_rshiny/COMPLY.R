@@ -272,23 +272,23 @@ ui <- page_sidebar(
           )
         )
       ),
+      
       navset_card_tab(
         nav_panel("Radon Data & Parameters", DTOutput("radon_allout_table")),
         nav_panel("Meterological Data", DTOutput("wind_data_table")),
-        nav_panel("Compliance Summary"  # (currently empty outputs; left as-is)),
-                  nav_panel("Export Data", # UNUSED: downloadButton(
-                            #   "downloadRadonCSV",
-                            #   "Download .CSV file",
-                            #   class = "btn-sm",
-                            #   width = "20%"
-                            # ),
-                            # UNUSED: downloadButton(
-                            #   "downloadRadonReport",
-                            #   "Generate HTML Report",
-                            #   class = "btn-sm",
-                            #   width = "20%"
-                            # ))
-                  ),
+        
+        nav_panel(
+          "Compliance Summary",
+          # add placeholder or actual outputs
+          textOutput("radon_summary")
+        ),
+        
+        nav_panel(
+          "Export Data"
+          # download buttons commented out
+          # downloadButton("downloadRadonCSV", "Download .CSV", class="btn-sm")
+        )
+        ),
                   layout_columns(
                     card(
                       full_screen = TRUE,
@@ -307,8 +307,8 @@ ui <- page_sidebar(
         )
       )
     )
-    
-    
+  
+
     
     
     # ---- Server ----
