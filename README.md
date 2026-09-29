@@ -16,9 +16,9 @@ Provides backup support for communication tasks and assists tasks related to pub
 ### Pull requests and merges
 * All code changes nd public facing documentation should be made through a Pull Request (PR) to the main branch. There should be no 'pushes' directly from a clone on atmos to the main branch on GitHub.
 * Updates to internal documention (e.g., top level README.md, meeting notes under the docs/ folder) can be made by directly editing and committing on the main branch.
-* Merging PRs will be handled by the lead developer, Adam Reff, unless a different workflow is needed for a particular change.
+* Merging PRs will be handled by the lead developer, Kirk Baker, unless a different workflow is needed for a particular change.
 * Each PR should include a high level summary of the changes that were made including if they address a specific Issue and what tests (if any) were done with the new code.
-* The author of the PR should assign Adam as a reviewer as well as any other workgroup members that should review or be aware of the changes.
+* The author of the PR should assign Kirk Baker as a reviewer as well as any other workgroup members that should review or be aware of the changes.
 
 ### Posting issues
 * Please use the Issues tab to post suggestions on how to improve this application.
