@@ -1,0 +1,26 @@
+Project name                                         |Test Project
+Company name                                         |Vandalay Industries
+Facility name                                        |Fake Source
+Facility address                                     |100 Main Street
+Contact person                                       |Contact Person
+Contact phone number                                 |919-000-0000
+Number of stacks                                     |1
+=====================================================
+Latitude (degrees)                                   |37.5407
+Longitude (degrees)                                  |-77.4360
+Stack height (m)                                     |25.
+Building height (m)                                  |20.
+Building width (m)                                   |50.
+Flow rate (m3/s)                                     |0.
+Stack diameter (m)                                   |0.
+Stack temp (C)                                       |12.78
+Air temp (C)                                         |12.78
+Vertical momentum (YES/NO)                           |NO
+Distance to MEI (m)                                  |200.
+Distance to veg (m)                                  |200.
+Distance to cow (m)                                  |2000.
+Avg wind speed (m/s)                                 |3.0
+Number of nuclides                                   |3
+Name,Emission (Ci/y)                                 |I-131,1.01E-02
+Name,Emission (Ci/y)                                 |SE-75,5.05E-02
+Name,Emission (Ci/y)                                 |SR-85,2.96E-01

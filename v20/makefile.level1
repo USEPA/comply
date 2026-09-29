@@ -1,0 +1,13 @@
+FLGS = -extend-source 
+LIBS = 
+TARGT = level1-linux.exe
+
+OBJCTS = \
+level1.o
+
+level1: $(OBJCTS)
+	ifx -o $(TARGT) $(FLGS) $(OBJCTS) $(LIBS)
+.f.o	:
+	ifx -c -o $@ $(FLGS) $<
+
+

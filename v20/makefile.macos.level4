@@ -1,0 +1,14 @@
+FLGS = -ffixed-line-length-none
+LIBS = 
+TARGT = level4-macos.exe
+
+OBJCTS = \
+level4.o \
+skrabel75.o 
+
+level4: $(OBJCTS)
+	gfortran -o $(TARGT) $(FLGS) $(OBJCTS) $(LIBS)
+.f.o	:
+	gfortran -c -o $@ $(FLGS) $<
+
+
