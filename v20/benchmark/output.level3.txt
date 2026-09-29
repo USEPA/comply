@@ -1,0 +1,61 @@
+COMPLY version 2.0beta level 3 - GitHub distribution
+-------------------------------------------
+
+-------------------------------------------
+Project: Test Project
+Company: Vandalay Industries
+Facility: Fake Source
+Address: 100 Main Street
+Point of Contact: Contact Person
+Phone Number: 919-000-0000
+-------------------------------------------
+
+-------------------------------------------
+Stack number:   1
+Latitude (degrees):   37.54070
+Longitude (degrees):  -77.43600
+Release height (m):       25.0
+Stack diameter (m):        0.0
+Flow rate (m3/s):        0.3
+Stack temperature (F):       55.0
+Air temperature (F):       55.0
+Vertical momentum (YES/NO): NO
+Distance from source to receptor (m):      200.0
+Distance from source to vegetable receptor (m):      200.0
+Distance from source to meat/milk receptor (m):     2000.0
+Assumed wind speed (m/s) when no wind rose:        3.0
+ 
+Radionuclide: I-131
+Emission rate (Ci/s):    0.3202689504882309E-09
+Effective dose equivalent all pathways (mrem/yr):    0.1433088390268149E+00
+Effective dose equivalent non-ingestion (mrem/yr):    0.9032494383058622E-02
+Effective dose equivalent vegetables (mrem/yr):    0.1178151441268516E+00
+Effective dose equivalent meat/milk (mrem/yr):    0.1646120051690471E-01
+ 
+Radionuclide: SE-75
+Emission rate (Ci/s):    0.1601344752441155E-08
+Effective dose equivalent all pathways (mrem/yr):    0.8370374848492818E+00
+Effective dose equivalent non-ingestion (mrem/yr):    0.4516247191529311E+00
+Effective dose equivalent vegetables (mrem/yr):    0.2814472887474788E+00
+Effective dose equivalent meat/milk (mrem/yr):    0.1039654769488719E+00
+ 
+Radionuclide: SR-85
+Emission rate (Ci/s):    0.9386099935100628E-08
+Effective dose equivalent all pathways (mrem/yr):    0.2053104898686613E+01
+Effective dose equivalent non-ingestion (mrem/yr):    0.1726400131759805E+01
+Effective dose equivalent vegetables (mrem/yr):    0.3222613579284970E+00
+Effective dose equivalent meat/milk (mrem/yr):    0.4443408998309868E-02
+-------------------------------------------
+
+-------------------------------------------
+Total effective dose equivalent all stacks (mrem/yr):       3.03
+ 
+Vegetable fraction of total:  0.2379
+Meat/milk fraction of total:  0.0412
+Other pathway fraction of total:  0.7210
+-------------------------------------------
+
+-------------------------------------------
+COMPLY version 2.0beta level 3 - GitHub distribution
+
+Execution date/time (MM/DD/YYYY HH:MM): 09/21/2026 10:21

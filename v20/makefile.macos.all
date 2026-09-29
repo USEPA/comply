@@ -1,0 +1,5 @@
+all:
+	make -f makefile.macos.level1
+	make -f makefile.macos.level3
+	make -f makefile.macos.level4
+	make -f makefile.macos.level4r

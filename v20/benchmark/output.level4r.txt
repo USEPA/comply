@@ -1,0 +1,45 @@
+COMPLY-r version 2.0beta distributed through GitHub
+--------------------------------------------------------------
+Project:Users Guide Example                                                                                                                                                                                     
+Company:Fake Mine                                                                                                                                                                                               
+Facility:Fake Mine                                                                                                                                                                                               
+Address:Western Colorado                                                                                                                                                                                        
+Point of Contact:None                                                                                                                                                                                                    
+Phone Number:919-000-0000                                                                                                                                                                                            
+--------------------------------------------------------------
+Stack number:  1
+Latitude (degrees):  39.10000
+Longitude (degrees):-109.00000
+Release height (m):       1.0
+Stack diameter (m):       1.5
+Flow rate (m3/s):      35.0
+Stack temperature (F):      13.9
+Air temperature (F):      54.0
+Vertial momentum (YES/NO):NO 
+Distance from source to receptor (m):   15000.0
+Receptor sector:W  
+Rainfall rate (m/yr):       0.0
+Emission rate (Ci/s):   0.00006341959415608533
+Effective dose equivalent (mrem/yr):   0.46946974145139153123
+--------------------------------------------------------------
+Stack number:  2
+Latitude (degrees):  39.10000
+Longitude (degrees):-109.00000
+Release height (m):       2.0
+Stack diameter (m):       2.5
+Flow rate (m3/s):      40.0
+Stack temperature (F):      12.8
+Air temperature (F):      54.0
+Vertial momentum (YES/NO):YES
+Distance from source to receptor (m):   15000.0
+Receptor sector:W  
+Rainfall rate (m/yr):       0.0
+Emission rate (Ci/s):   0.00016013447524411547
+Effective dose equivalent (mrem/yr):   1.18541109716476356084
+--------------------------------------------------------------
+Total effective dose equivalent all stacks (mrem/yr):   1.65488
+--------------------------------------------------------------
+--------------------------------------------------------------
+COMPLY-r version 2.0beta distributed through GitHub
+ 
+Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM): 9/21/2026 10:22

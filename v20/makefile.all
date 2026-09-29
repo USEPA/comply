@@ -1,0 +1,5 @@
+all:
+	make -f makefile.level1
+	make -f makefile.level3
+	make -f makefile.level4
+	make -f makefile.level4r

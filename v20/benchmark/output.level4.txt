@@ -1,0 +1,38 @@
+COMPLY version 2.0 level 4 distributed through GitHub
+-----------------------------------------------------------------------
+Project:Test Project                                                                                                                                                                                            
+Company:Vandalay Industries                                                                                                                                                                                     
+Facility:Reactor A                                                                                                                                                                                               
+Address:100 Main Street                                                                                                                                                                                         
+Point of Contact:Contact Person                                                                                                                                                                                          
+Phone Number:919-000-0000                                                                                                                                                                                            
+Air temperature (F):      55.0
+Rainfall rate (m/yr):       1.0
+-----------------------------------------------------------------------
+Stack number:  1
+Latitude (degrees):  37.54070
+Longitude (degrees): -77.43600
+Release height (m):      25.0
+Stack diameter (m):       0.0
+Flow rate (m3/s):       0.0
+Stack temperature (F):      55.0
+Vertical momentum (YES/NO):NO 
+Building height (m):      20.0
+Building width (m):      50.0
+Distance from source to receptor (m):     240.0
+Rainfall rate (m/yr):       1.0
+Number of radionuclides: 3
+ 
+Max dose receptor     240. m downwind in sector ENE
+ 
+Radionuclide,Emissions,Concentration,Total Dose,Immersion,Inhalation,Surface,Meat,Milk,Vegetable
+I-131   , 0.320E-09, 0.310E-02, 0.621E-02, 0.593E-05, 0.817E-03, 0.128E-02, 0.163E-03, 0.120E-02, 0.275E-02
+SE-75   , 0.160E-08, 0.155E-01, 0.355E-01, 0.307E-04, 0.105E-02, 0.266E-01, 0.338E-02, 0.762E-03, 0.367E-02
+SR-85   , 0.939E-08, 0.909E-01, 0.113E+00, 0.233E-03, 0.366E-02, 0.104E+00, 0.377E-04, 0.914E-04, 0.406E-02
+-----------------------------------------------------------------------
+Total effective dose equivalent all stacks (mrem/yr): 0.154E+00
+-----------------------------------------------------------------------
+ 
+-----------------------------------------------------------------------
+ 
+Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM): 9/21/2026 10:22

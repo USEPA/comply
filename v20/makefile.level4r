@@ -1,0 +1,13 @@
+FLGS = -extend-source
+LIBS = 
+TARGT = level4r-linux.exe
+
+OBJCTS = \
+level4r.o 
+
+level4r: $(OBJCTS)
+	ifx -o $(TARGT) $(FLGS) $(OBJCTS) $(LIBS)
+.f.o	:
+	ifx -c -o $@ $(FLGS) $<
+
+

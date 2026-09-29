@@ -1,28 +1,13 @@
-# COMPLY Development Repository
-The COMPLY code in this repository is organized around programming languages. There is a Fortran version, R version, and additional code that builds a user interface using R Shiny. 
+# COMPLY
 
-# Workgroup rolls and responsibilities
-### **Lead Developer/Integrator, Kirk Baker**
-Oversees the development of code and is responsible for maintaining the main branch, including code development, testing, and merging pull requests (PRs).
+COMPLY is a computerized screening tool for evaluating radiation exposure from atmospheric releases of radionuclides. The tool may be used for demonstrating compliance with some EPA and Nuclear Regulatory Commission regulations, including the National Emission Standards for Hazardous Air Pollutants (NESHAPs) in 40 CFR Part 61, Subpart H and Subpart I.
 
-### **Lead Developer R-Shiny Interface, Megan MacDonald**
-Oversees the development of R-shiny App related code and is responsible for maintaining the main branch, including code development, testing, and merging pull requests (PRs).
+COMPLY calculates the effective dose equivalent (ede) from radionuclides released from stacks and vents. Atmospheric concentrations are estimated using a Gaussian plume model and equations that account for building wake effects.
 
-### **Communications Support, TBD**
-Provides backup support for communication tasks and assists tasks related to public release of the code and user interface.
+## Background
 
-# How to use this repository
+In 1985, the EPA asked the National Council on Radiation Protection and Measurements (NCRP) to develop simple screening methods for assessing compliance with the Clean Air Act by users of small quantities of radionuclides. NCRP published these procedures in 1986 and 1989 in Addendum to NCRP Commentary No. 3 on Determining Compliance with Environmental Standards (NCRP 89). EPA's COMPLY model was developed based on the procedures in Addendum to NCRP Commentary No. 3 on Determining Compliance with Environmental Standards.  
 
-### Pull requests and merges
-* All code changes nd public facing documentation should be made through a Pull Request (PR) to the main branch. There should be no 'pushes' directly from a clone on atmos to the main branch on GitHub.
-* Updates to internal documention (e.g., top level README.md, meeting notes under the docs/ folder) can be made by directly editing and committing on the main branch.
-* Merging PRs will be handled by the lead developer, Kirk Baker, unless a different workflow is needed for a particular change.
-* Each PR should include a high level summary of the changes that were made including if they address a specific Issue and what tests (if any) were done with the new code.
-* The author of the PR should assign Kirk Baker as a reviewer as well as any other workgroup members that should review or be aware of the changes.
+## Strengths and Limitations
 
-### Posting issues
-* Please use the Issues tab to post suggestions on how to improve this application.
-* If an Issue is resolved with a merged PR into main it should be closed with reference to the PR number(s).
-
-# Resources
-* Code style tips from Hadley Wickham’s R for Data Science - https://r4ds.hadley.nz/workflow-style
+The COMPLY computer software includes four increasing levels of complexity. A user can demonstrate compliance at any level. Level 1 requests the least amount of information: emission concentration or quantity possessed. However, under Level 1, "worst case" assumptions are used in the dose estimate. Level 4 requests the most information and uses site specific data instead of assuming the worst. The values estimated by this screening model are strictly for comparison with environmental standards and are not intended to represent actual doses to real people.
