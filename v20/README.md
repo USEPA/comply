@@ -1,4 +1,4 @@
-# RELEASE NOTES for COMPLY v2.0, 09/29/2026
+# RELEASE NOTES for COMPLY v2.0, 10/22/2026
 
 More information about COMPLY is available at epa.gov/radiation/comply
 ***
@@ -17,6 +17,6 @@ New features, major updates, and bug fixes are described below compared to COMPL
   
 ### Bug Fixes
 * Bug in wet deposition calculation which only impacts simulations using Level 4 with a wind rose.
-  + Implications: Slightly lower dose predictions.
+  + Implications: Slightly higher dose predictions.
 
 
