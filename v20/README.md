@@ -11,12 +11,14 @@ New features, major updates, and bug fixes are described below compared to COMPL
 * Numerous binary input files converted to a single ascii format CSV file
 * Standard output more comprehensive and added a new diagnostic output file
   + Standard output provides nuclide specific dose by exposure pathway
-  + Diagnostic output provides nuclide specific air concentration and dose at evenly spaced receptors from 20 m to 50 km downwind
+  + Diagnostic output provides nuclide specific air concentration and dose at evenly spaced receptors from the source to 50 km downwind
 * Allow user input for annual rainfall rate
 * Source code available along with scripts to compile on Windows, Mac, or Linux computing systems
-  
+
 ### Bug Fixes
-* Bug in wet deposition calculation which only impacts simulations using Level 4 with a wind rose.
-  + Implications: Slightly higher dose predictions.
+* Bug in wet deposition calculation which only impacts simulations using Level 4 with a wind rose
+  + Implications: Slightly higher dose predictions
+* Decay chain concentration solver no longer crashes when the parent and progeny have the exact same decay rate
 
-
+### Minor changes
+* Percent calm winds calculated from the sum of sector wind frequencies and is no longer a user input
