@@ -1,28 +1,30 @@
-COMPLY version 2.0beta level 1 distributed through GitHub
 -----------------------------------------------------------------------
-Project:Test Project                                                                                                                                                                                            
-Company:Vandalay Industries                                                                                                                                                                                     
-Facility:Fake Source                                                                                                                                                                                             
-Address:100 Main Street                                                                                                                                                                                         
-Point of Contact:Contact Person                                                                                                                                                                                          
-Phone Number:919-000-0000                                                                                                                                                                                            
+COMPLY version 2.0 level 1
 -----------------------------------------------------------------------
+Project:Test Project
+Company:Vandalay Industries
+Facility:Fake Source
+Address:100 Main Street
+Point of Contact:Contact Person
+Phone Number:919-000-0000
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+Total possession fraction:  4.0
+Total possession iodine fraction:  0.3
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+ 
 Stack number:  1
 Latitude (degrees):  37.54070
 Longitude (degrees): -77.43600
-Number of radionuclides: 3
+Number of nuclides: 3
  
-Radionuclide, Phase, Amount, Possession Fraction
-I-131   ,G,   0.00200000009499490261,   0.29850748181343078613
-SE-75   ,G,   0.00200000009499490261,   1.81818187236785888672
-SR-85   ,L,   3.50000000000000000000,   1.84210526943206787109
+Nuclide, Form, Amount(Ci/yr), Possession Fraction
+I-131   ,G, 2.00E-03,  0.3
+SE-75   ,G, 2.00E-03,  1.8
+SR-85   ,L, 3.50E+00,  1.8
  
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
-Total possession fraction:      3.96
-Total possession iodine fraction:      0.30
------------------------------------------------------------------------
------------------------------------------------------------------------
-COMPLY version 2.0beta level 1 distributed through GitHub
  
-Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM): 9/21/2026 10:21
+Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):10/26/2026 10:17
