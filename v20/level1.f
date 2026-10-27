@@ -144,25 +144,25 @@ c ============================================================================
 c Read input namelist file
 c File format: "Label: Value" with label right-justified in 20 columns
 
-       read(11,'(20x,a)') title
+       read(11,'(49x,a)') title
        ! Skip first 20 characters (label), read remaining as project title
        
-       read(11,'(20x,a)') company
+       read(11,'(49x,a)') company
        ! Read company/organization name
        
-       read(11,'(20x,a)') facility
+       read(11,'(49x,a)') facility
        ! Read facility identifier/name
        
-       read(11,'(20x,a)') address
+       read(11,'(49x,a)') address
        ! Read facility street address
        
-       read(11,'(20x,a)') poc
+       read(11,'(49x,a)') poc
        ! Read point of contact person name
        
-       read(11,'(20x,a)') phone
+       read(11,'(49x,a)') phone
        ! Read contact phone number (kept as string to preserve formatting)
        
-       read(11,'(20x,i3)') nstacks
+       read(11,'(49x,i3)') nstacks
        ! Read number of emission stacks as 3-digit integer
        ! This value determines size for all stack-related arrays
 
@@ -212,27 +212,38 @@ c ============================================================================
        read(11,'(a)') 
        ! Skip separator line (e.g., '===...')
        
-       read(11,'(20x,f10.5)') latitude(n)
+       read(11,'(49x,f10.5)') latitude(n)
        ! Read latitude in decimal degrees (format: skip 20 chars, read float)
        
-       read(11,'(20x,f10.5)') longitude(n)
+       read(11,'(49x,f10.5)') longitude(n)
        ! Read longitude in decimal degrees
        
-       read(11,'(20x,i3)') nrads(n)
+       read(11,'(49x,i3)') nrads(n)
        ! Read number of radionuclides for this stack
 
        do m = 1, nrads(n)
        ! Loop over each radionuclide at this stack
        
-       read(11,'(20x,a)') inline
+       read(11,'(49x,a)') inline
        ! Read line containing radionuclide data
        
-       read(inline,*) radname(n,m), radtype(n,m), rademis(n,m)
+       read(inline,*) NUC, radtype(n,m), rademis(n,m)
        ! Parse comma-separated values from line:
        !   radname: isotope identifier (e.g., 'I-131')
        !   radtype: physical state (G=gas, L=liquid, S=solid, C=aerosol)
        !   rademis: emission rate in Ci/year
-       
+
+       !convert nuclide name to all uppercase
+       do i = 1, len(NUC)
+        j = iachar(NUC(i:i))
+        if(j.ge.iachar("a").and.j.le.iachar("z")) then
+                radname(n,m)(i:i) = achar(iachar(NUC(i:i))-32)
+        else
+                radname(n,m)(i:i) = NUC(i:i)
+        endif
+       enddo
+
+
        enddo
        ! End loop over radionuclides
        
@@ -282,7 +293,8 @@ c Could be optimized by pre-loading all 823 records into arrays before searching
         
         if(radname(n,m) .eq. NUC) then
          ! If radionuclide name matches record from reference file:
-         
+        
+         write(*,*)  
          write(*,*)'Match:', NUC, radtype(n,m)
          ! Print to console: matched radionuclide name and physical state
          
@@ -314,19 +326,29 @@ c SELECT CASE is more efficient than nested IF statements for this lookup.
          case('G')
           ! Gaseous form: use gaseous possession limit (column 1)
           fract(n,m) = rademis(n,m) / posmax(1,1)
-         
+          write(*,*)'WARNING: These results are not valid if:'
+          write(*,*)'1) A receptor is within 10 m of any release point; or'
+          write(*,*)'2) A meat, milk, or vegetable receptor is within 100 m of any release point.'
+
          case('L')
           ! Liquid form: use liquid possession limit (column 2)
           fract(n,m) = rademis(n,m) / posmax(1,2)
-         
+          write(*,*)'WARNING: These results are not valid if:'
+          write(*,*)'1) A receptor is within 10 m of any release point; or'
+          write(*,*)'2) A meat, milk, or vegetable receptor is within 100 m of any release point.'
+
          case('S')
           ! Solid form: use solid possession limit (column 3)
           fract(n,m) = rademis(n,m) / posmax(1,3)
-         
+          write(*,*)'WARNING: These results are not valid if:'
+          write(*,*)'1) A receptor is within 10 m of any release point; or'
+          write(*,*)'2) A meat, milk, or vegetable receptor is within 100 m of any release point.'
+
          case('C')
-          ! Particulate/aerosol form: use particulate limit (column 4)
+          ! Concentration (column 4)
           fract(n,m) = rademis(n,m) / posmax(1,4)
-         
+          write(*,*)'WARNING: If anyone lives within 3 stack diameters of any release point these results are not valid.'
+
          case default
           ! Unrecognized physical state code
           write(*,*)'Unrecognized physical state:', radtype(n,m)
@@ -391,6 +413,8 @@ c INDEX function returns position of substring in string, or 0 if not found.
        enddo
        ! End outer loop over stacks
 
+       write(*,*)
+       write(*,*)
        write(*,*)'Total possession (fraction):', alldose
        ! Display total to console
        
@@ -404,36 +428,57 @@ c ============================================================================
 c Write standardized output (unchanged)
 c Output report structured with header, per-stack details, and summary.
 
+       write(12,2001)
+       ! Write separator line
+
        write(12,4000)
        ! Write program identification banner
        
        write(12,2001)
        ! Write separator line
        
-       write(12,1000) title
+       write(12,1000) trim(title)
        ! Write project title
        
-       write(12,1001) company
+       write(12,1001) trim(company)
        ! Write company name
        
-       write(12,1002) facility 
+       write(12,1002) trim(facility) 
        ! Write facility identifier
        
-       write(12,1003) address
+       write(12,1003) trim(address)
        ! Write facility address
        
-       write(12,1004) poc
+       write(12,1004) trim(poc)
        ! Write point of contact
        
-       write(12,1005) phone
+       write(12,1005) trim(phone)
        ! Write contact phone number
+
+       write(12,2001)
+       ! Write separator line
+
+       write(12,2001)
+       ! Write second separator line
+
+       write(12,2000) alldose
+       ! Write total possession fraction
+
+       write(12,1999) idose
+       ! Write iodine possession fraction subtotal
+
+       write(12,2001)
+       ! Write separator line
+
+       write(12,2001)
+       ! Write separator line
 
        do n = 1, nstacks
        ! Loop over all stacks to write per-stack details
        
-       write(12,2001)
-       ! Write separator line
-       
+       write(12,2002)
+       ! Write blank line for spacing
+
        write(12,1008) n
        ! Write stack number
        
@@ -472,23 +517,8 @@ c Output report structured with header, per-stack details, and summary.
        ! Write separator line
        
        write(12,2001)
-       ! Write second separator line
-       
-       write(12,2000) alldose
-       ! Write total possession fraction
-       
-       write(12,1999) idose
-       ! Write iodine possession fraction subtotal
-       
-       write(12,2001)
        ! Write separator line
        
-       write(12,2001)
-       ! Write second separator line
-       
-       write(12,4000)
-       ! Write program identification banner
-
 c ============================================================================
 c SECTION 8: ADD EXECUTION TIMESTAMP
 c ============================================================================
@@ -566,19 +596,19 @@ c 'a' = string, 'f10.5' = float with 5 decimal places, 'i3' = 3-digit integer
  1008 FORMAT('Stack number:',i3)
       ! Format for stack number: 3-digit integer
  
- 1013 FORMAT('Number of radionuclides:',I2)
+ 1013 FORMAT('Number of nuclides:',I2)
       ! Format for radionuclide count: 2-digit integer
  
- 1014 FORMAT(a,',',a,',',f25.20,',',f25.20)
+ 1014 FORMAT(a,',',a,',',ES9.2,',',F5.1)
       ! Format for radionuclide data row (CSV-style):
       ! radname (string), radtype (string), rademis (float with 20 decimals),
       ! fract (float with 20 decimals)
       ! High precision (20 decimals) preserves calculation accuracy
  
- 1999 FORMAT('Total possession iodine fraction:',f10.2)
+ 1999 FORMAT('Total possession iodine fraction:',f5.1)
       ! Format for iodine subtotal: float with 2 decimal places
  
- 2000 FORMAT('Total possession fraction:',f10.2)
+ 2000 FORMAT('Total possession fraction:',f5.1)
       ! Format for total possession: float with 2 decimal places
  
  2001 FORMAT('-----------------------------------------------------------------------')
@@ -587,16 +617,16 @@ c 'a' = string, 'f10.5' = float with 5 decimal places, 'i3' = 3-digit integer
  2002 FORMAT(' ')
       ! Format for blank line
  
- 2003 FORMAT('Radionuclide, Phase, Amount, Possession Fraction')
+ 2003 FORMAT('Nuclide, Form, Amount(Ci/yr), Possession Fraction')
       ! Format for column headers in detailed radionuclide table
  
  2100 FORMAT('Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):',
-     &       i2,'/',i2,'/',i4,' ',i2,':',i2)
+     &       i2.2,'/',i2.2,'/',i4,' ',i2.2,':',i2.2)
       ! Format for timestamp: MM/DD/YYYY HH:MM (Local Solar Time)
       ! Uses 2-digit integers with leading zeros for month/day/hour/minute
       ! Uses 4-digit integer for year
  
- 4000 FORMAT('COMPLY version 2.0beta level 1 distributed through GitHub')
+ 4000 FORMAT('COMPLY version 2.0 level 1')
       ! Format for program identification banner
 
       END 

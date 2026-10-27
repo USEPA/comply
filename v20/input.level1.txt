@@ -1,14 +1,14 @@
-Project name       |Test Project
-Company name       |Vandalay Industries
-Facility name      |Fake Source
-Facility address   |100 Main Street
-Contact person     |Contact Person
-Contact phone #    |919-000-0000
-Number of stacks   |1
-===================
-Latitude (degrees) |37.5407
-Longitude(degrees) |-77.4360
-Number of radionucs|3
-Name,Form,Amount   |I-131,G,2.00E-03
-Name,Form,Amount   |SE-75,G,2.00E-03
-Name,Form,Amound   |SR-85,L,3.50E+00
+Project name                                    |Test Project
+Company name                                    |Vandalay Industries
+Facility name                                   |Fake Source
+Facility address                                |100 Main Street
+Contact person                                  |Contact Person
+Contact phone #                                 |919-000-0000
+Number of stacks                                |1
+================================================
+Latitude (degrees) - optional                   |37.5407
+Longitude(degrees) - optional                   |-77.4360
+Number of radionucs                             |3
+Nuclide,Form(Gas,Liquid,Solid,Conc),Amount(Ci/y)|I-131,G,2.00E-03
+Nuclide,Form(Gas,Liquid,Solid,Conc),Amount(Ci/y)|SE-75,G,2.00E-03
+Nuclide,Form(Gas,Liquid,Solid,Conc),Amount(Ci/y)|SR-85,L,3.50E+00

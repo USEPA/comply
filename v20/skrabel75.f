@@ -22,6 +22,19 @@
       REAL*8, PARAMETER :: EXP_CAP = 40.0D0           ! cap for exponent to avoid underflow
       REAL*8, PARAMETER :: TINY_ACT = 1.0D-36         ! activity floor
 
+      ! This solver only works if none of the half lives are exactly the same
+      do l = 1, nchain
+      do q = 1, nchain
+       if(l.ne.q) then !same index same nuclide
+       if(halflife(l).eq.halflife(q)) then
+       halflife(l) = halflife(l)*1.0001 !make a minor change to the halflife 
+       else
+       endif
+       else
+       endif
+      enddo
+      enddo
+
       ! Precompute decay and total removal constants
       do l = 1, nchain
        kvalue(l)   = LOG2 / halflife(l)

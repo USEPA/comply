@@ -1,50 +1,66 @@
-Project name                                         |Users Guide Example
-Company name                                         |Fake Mine
-Facility name                                        |Fake Mine
-Facility address                                     |Western Colorado
-Contact person                                       |None
-Contact phone number                                 |919-000-0000
-Number of stacks                                     |2
-=====================================================
-Source of wind data                                  |NCDC
-Dates of coverage                                    |1988 to 1989
-Wind data location                                   |Grand Junction
-Distance to source                                   |40 miles
-Percent calm winds                                   |0.01
-Number of wind sectors                               |16
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|N  ,0.054,3.84,15000.,S
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|NNE,0.081,4.62,15000.,SSW
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|NE ,0.113,3.89,20000.,SW
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|ENE,0.053,2.91,20000.,WSW
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|E  ,0.071,2.44,15000.,W
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|ESE,0.043,2.85,20000.,WNW
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|SE ,0.047,3.95,25000.,NW
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|SSE,0.038,4.86,30000.,NNW
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|S  ,0.145,4.83,30000.,N
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|SSW,0.104,5.18,25000.,NNE
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|SW ,0.074,4.91,25000.,NE
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|WSW,0.029,4.21,25000.,ENE
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|W  ,0.036,4.01,20000.,E
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|WNW,0.038,5.54,20000.,ESE
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|NW ,0.044,5.03,20000.,SE
-Winds FROM,Freq,Speed(m/s),Recpt Dist(m),Recpt Sector|NNW,0.021,4.69,20000.,SSE
-Air temp (C)                                         |12.2
-Rainfall (cm/yr)                                     |1.0
-=====================================================
-Latitude (degrees)                                   |39.1
-Longitude(degrees)                                   |-109.0
-Stack height (m)                                     |1.
-Flow rate (m3/s)                                     |35.
-Diameter (m)                                         |1.5
-Stack temp (C)                                       |13.89
-Vertical momentum                                    |NO
-Emission rate (Ci/yr)                                |2.00E+03
-=====================================================
-Latitude (degrees)                                   |39.1
-Longitude(degrees)                                   |-109.0
-Stack height (m)                                     |2.
-Flow rate (m3/s)                                     |40.
-Diameter (m)                                         |2.5
-Stack temp (C)                                       |12.78
-Vertical momentum                                    |YES
-Emission rate (Ci/yr)                                |5.05E+03
+Project name                         |Users Guide Example
+Company name                         |Fake Mine
+Facility name                        |Fake Mine
+Facility address                     |Western Colorado
+Contact person                       |None
+Contact phone number                 |919-000-0000
+Diagnostic output file (YES/NO)      |YES
+Number of stacks                     |2
+=====================================
+Source of wind data                  |NCDC
+Dates of coverage                    |1988 to 1989
+Wind data location                   |Grand Junction
+Distance to source                   |40 miles
+Air temperature (C)                  |12.2
+Number of wind sectors               |16
+Winds FROM,Frequency,Speed(m/s)      |N  ,0.054,3.84
+Winds FROM,Frequency,Speed(m/s)      |NNE,0.081,4.62
+Winds FROM,Frequency,Speed(m/s)      |NE ,0.113,3.89
+Winds FROM,Frequency,Speed(m/s)      |ENE,0.053,2.91
+Winds FROM,Frequency,Speed(m/s)      |E  ,0.071,2.44
+Winds FROM,Frequency,Speed(m/s)      |ESE,0.043,2.85
+Winds FROM,Frequency,Speed(m/s)      |SE ,0.047,3.95
+Winds FROM,Frequency,Speed(m/s)      |SSE,0.038,4.86
+Winds FROM,Frequency,Speed(m/s)      |S  ,0.145,4.83
+Winds FROM,Frequency,Speed(m/s)      |SSW,0.104,5.18
+Winds FROM,Frequency,Speed(m/s)      |SW ,0.074,4.91
+Winds FROM,Frequency,Speed(m/s)      |WSW,0.029,4.21
+Winds FROM,Frequency,Speed(m/s)      |W  ,0.036,4.01
+Winds FROM,Frequency,Speed(m/s)      |WNW,0.038,5.54
+Winds FROM,Frequency,Speed(m/s)      |NW ,0.044,5.03
+Winds FROM,Frequency,Speed(m/s)      |NNW,0.021,4.69
+=====================================
+Receptor sector,receptor distance(m) |N  ,30000.
+Receptor sector,receptor distance(m) |NNE,25000.
+Receptor sector,receptor distance(m) |NE ,25000.
+Receptor sector,receptor distance(m) |ENE,25000.
+Receptor sector,receptor distance(m) |W  ,20000.
+Receptor sector,receptor distance(m) |ESE,20000.
+Receptor sector,receptor distance(m) |SE ,20000.
+Receptor sector,receptor distance(m) |SSE,20000.
+Receptor sector,receptor distance(m) |S  ,15000.
+Receptor sector,receptor distance(m) |SSW,15000.
+Receptor sector,receptor distance(m) |SW ,20000.
+Receptor sector,receptor distance(m) |WSW,20000.
+Receptor sector,receptor distance(m) |W  ,15000.
+Receptor sector,receptor distance(m) |WNW,20000.
+Receptor sector,receptor distance(m) |NW ,25000.
+Receptor sector,receptor distance(m) |NNW,30000.
+=====================================
+Latitude (degrees)                   |39.1
+Longitude(degrees)                   |-109.0
+Stack height (m)                     |1.
+Flow rate (m3/s)                     |35.
+Diameter (m)                         |1.5
+Stack temp (C)                       |13.89
+Vertical momentum                    |NO
+Emission rate (Ci/yr)                |2.00E+03
+=====================================
+Latitude (degrees)                   |39.1
+Longitude(degrees)                   |-109.0
+Stack height (m)                     |2.
+Flow rate (m3/s)                     |40.
+Diameter (m)                         |2.5
+Stack temp (C)                       |12.78
+Vertical momentum                    |YES
+Emission rate (Ci/yr)                |5.05E+03
