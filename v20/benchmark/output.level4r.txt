@@ -1,45 +1,98 @@
-COMPLY-r version 2.0beta distributed through GitHub
---------------------------------------------------------------
-Project:Users Guide Example                                                                                                                                                                                     
-Company:Fake Mine                                                                                                                                                                                               
-Facility:Fake Mine                                                                                                                                                                                               
-Address:Western Colorado                                                                                                                                                                                        
-Point of Contact:None                                                                                                                                                                                                    
-Phone Number:919-000-0000                                                                                                                                                                                            
---------------------------------------------------------------
-Stack number:  1
-Latitude (degrees):  39.10000
-Longitude (degrees):-109.00000
-Release height (m):       1.0
-Stack diameter (m):       1.5
-Flow rate (m3/s):      35.0
-Stack temperature (F):      13.9
-Air temperature (F):      54.0
-Vertial momentum (YES/NO):NO 
-Distance from source to receptor (m):   15000.0
-Receptor sector:W  
-Rainfall rate (m/yr):       0.0
-Emission rate (Ci/s):   0.00006341959415608533
-Effective dose equivalent (mrem/yr):   0.46946974145139153123
---------------------------------------------------------------
-Stack number:  2
-Latitude (degrees):  39.10000
-Longitude (degrees):-109.00000
-Release height (m):       2.0
-Stack diameter (m):       2.5
-Flow rate (m3/s):      40.0
-Stack temperature (F):      12.8
-Air temperature (F):      54.0
-Vertial momentum (YES/NO):YES
-Distance from source to receptor (m):   15000.0
-Receptor sector:W  
-Rainfall rate (m/yr):       0.0
-Emission rate (Ci/s):   0.00016013447524411547
-Effective dose equivalent (mrem/yr):   1.18541109716476356084
---------------------------------------------------------------
-Total effective dose equivalent all stacks (mrem/yr):   1.65488
---------------------------------------------------------------
---------------------------------------------------------------
-COMPLY-r version 2.0beta distributed through GitHub
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+COMPLY-r version 2.0 level 4 Dose Summary Report
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
  
-Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM): 9/21/2026 10:22
+          Project:Users Guide Example
+          Company:Fake Mine
+         Facility:Fake Mine
+          Address:Western Colorado
+ Point of Contact:None
+     Phone Number:919-000-0000
+ 
+------------------------------------------------------------------------------
+DOSE ESTIMATES
+ 
+Total Effective Dose Equivalent all stacks (mrem/year):    1.6532
+ 
+ 
+ 
+Stack number                   :  1
+Maximum dose receptor was located at   15000. m downwind in sector W  
+ 
+Emissions(Ci/s),Conc(Ci/m3),Inhalation Dose
+  6.342E-05,  1.359E-12,  4.690E-01
+ 
+Stack number                   :  2
+Maximum dose receptor was located at   15000. m downwind in sector W  
+ 
+Emissions(Ci/s),Conc(Ci/m3),Inhalation Dose
+  1.601E-04,  3.431E-12,  1.184E+00
+ 
+------------------------------------------------------------------------------
+STACK INFORMATION
+ 
+Stack number                   :  1
+Stack latitude (degrees)       :  39.10000
+Stack longitude (degrees)      :-109.00000
+Release height (m)             :       1.0
+Stack diameter (m)             :       1.5
+Flow rate (m3/s)               :      35.0
+Stack temperature (C)          :      13.9
+Vertical momentum (YES/NO)     :NO
+ 
+Stack number                   :  2
+Stack latitude (degrees)       :  39.10000
+Stack longitude (degrees)      :-109.00000
+Release height (m)             :       2.0
+Stack diameter (m)             :       2.5
+Flow rate (m3/s)               :      40.0
+Stack temperature (C)          :      12.8
+Vertical momentum (YES/NO)     :YES
+ 
+ 
+------------------------------------------------------------------------------
+METEOROLOGY
+ 
+Air temperature (C)          :      54.0
+Calm winds (fraction)        :     0.009
+ 
+Sector winds from, frequency(fraction), speed(m/s)
+N                ,        0.054    ,     3.840
+NNE              ,        0.081    ,     4.620
+NE               ,        0.113    ,     3.890
+ENE              ,        0.053    ,     2.910
+E                ,        0.071    ,     2.440
+ESE              ,        0.043    ,     2.850
+SE               ,        0.047    ,     3.950
+SSE              ,        0.038    ,     4.860
+S                ,        0.145    ,     4.830
+SSW              ,        0.104    ,     5.180
+SW               ,        0.074    ,     4.910
+WSW              ,        0.029    ,     4.210
+W                ,        0.036    ,     4.010
+WNW              ,        0.038    ,     5.540
+NW               ,        0.044    ,     5.030
+NNW              ,        0.021    ,     4.690
+ 
+Sector winds to  , downwind receptor(m)
+S                , 15000.000
+SSW              , 15000.000
+SW               , 20000.000
+WSW              , 20000.000
+W                , 15000.000
+WNW              , 20000.000
+NW               , 25000.000
+NNW              , 30000.000
+N                , 30000.000
+NNE              , 25000.000
+NE               , 25000.000
+ENE              , 25000.000
+W                , 20000.000
+ESE              , 20000.000
+SE               , 20000.000
+SSE              , 20000.000
+------------------------------------------------------------------------------
+ 
+Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM):10/26/2026 10:16

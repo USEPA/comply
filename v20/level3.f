@@ -104,7 +104,7 @@ c   FB = buoyancy flux parameter
 c Primary loop indices and control variables
 
        INTEGER nstacks
-       INTEGER N, M, j, jj, receptor, ios
+       INTEGER N, M, I, j, jj, receptor, ios
        INTEGER date_time(8)
 
 c Facility metadata and temporary input variables
@@ -206,14 +206,14 @@ c ============================================================================
 c SECTION 5: READ FACILITY METADATA AND INITIAL STACK CONFIGURATION
 c ============================================================================
 
-        READ(11, '(54x,a)', IOSTAT=ios) title
+        READ(11, '(38x,a)', IOSTAT=ios) title
         IF (ios /= 0) STOP 'Error reading title'
-        READ(11, '(54x,a)') company
-        READ(11, '(54x,a)') facility
-        READ(11, '(54x,a)') address
-        READ(11, '(54x,a)') poc
-        READ(11, '(54x,a)') phone
-        READ(11, '(54x,i3)') nstacks
+        READ(11, '(38x,a)') company
+        READ(11, '(38x,a)') facility
+        READ(11, '(38x,a)') address
+        READ(11, '(38x,a)') poc
+        READ(11, '(38x,a)') phone
+        READ(11, '(38x,i3)') nstacks
 
         IF (nstacks <= 0) THEN
             WRITE(*,*) 'ERROR: nstacks must be > 0'
@@ -265,21 +265,21 @@ c This allows proper dimensioning of 2D radionuclide arrays
         DO n = 1, nstacks
             READ(11, '(a)', IOSTAT=ios)  !blank spacer
             IF (ios /= 0) STOP 'Error reading blank line'
-            READ(11, '(54x,f10.5)') latitude(n)
-            READ(11, '(54x,f10.5)') longitude(n)
-            READ(11, '(54x,f10.5)') releaseht(n)
-            READ(11, '(54x,f10.5)') bldheight(n)
-            READ(11, '(54x,f10.5)') bldwidth(n)
-            READ(11, '(54x,f10.5)') flowrate(n)
-            READ(11, '(54x,f10.5)') diameter(n)
-            READ(11, '(54x,f10.5)') stacktemp(n)
-            READ(11, '(54x,f10.5)') airtemp(n)
-            READ(11, '(54x,a)') verticalmomentum(n)
-            READ(11, '(54x,f10.5)') distance(n)
-            READ(11, '(54x,f10.5)') distanceveg(n)
-            READ(11, '(54x,f10.5)') distancecow(n)
-            READ(11, '(54x,f10.5)') windspeed(n)
-            READ(11, '(54x,i3)') nrads(n)
+            READ(11, '(38x,f10.5)') latitude(n)
+            READ(11, '(38x,f10.5)') longitude(n)
+            READ(11, '(38x,f10.5)') releaseht(n)
+            READ(11, '(38x,f10.5)') bldheight(n)
+            READ(11, '(38x,f10.5)') bldwidth(n)
+            READ(11, '(38x,f10.5)') flowrate(n)
+            READ(11, '(38x,f10.5)') diameter(n)
+            READ(11, '(38x,f10.5)') stacktemp(n)
+            READ(11, '(38x,f10.5)') airtemp(n)
+            READ(11, '(38x,a)') verticalmomentum(n)
+            READ(11, '(38x,f10.5)') distance(n)
+            READ(11, '(38x,f10.5)') distanceveg(n)
+            READ(11, '(38x,f10.5)') distancecow(n)
+            READ(11, '(38x,f10.5)') windspeed(n)
+            READ(11, '(38x,i3)') nrads(n)
 
 c ============================================================================
 c SECTION 8: REWIND AND READ RADIONUCLIDE EMISSION DATA
@@ -289,10 +289,22 @@ c
             stacktemp(n) = stacktemp(n) * (9./5.) + 32. !convert C to F
 
             DO M = 1, nrads(n)
-                READ(11, '(54x,a)') inline
-                READ(inline, *) radname(n,m), rademis(n,m)
+                READ(11, '(38x,a)') inline
+                READ(inline, *) NUC, rademis(n,m)
                 rademis(n,m) = rademis(n,m) * (1./365.)*(1./24.)*(1./60.)*(1./60.) !year to seconds
-            ENDDO
+
+                       !convert nuclide name to all uppercase
+                do i = 1, len(NUC)
+                 j = iachar(NUC(i:i))
+                 if(j.ge.iachar("a").and.j.le.iachar("z")) then
+                 radname(n,m)(i:i) = achar(iachar(NUC(i:i))-32)
+                 else
+                 radname(n,m)(i:i) = NUC(i:i)
+                 endif
+                enddo
+
+
+                ENDDO
          
         ENDDO !end loop over stacks
 
@@ -469,10 +481,18 @@ c at grid of distances from the stack
 
             DO M = 1, nrads(n)
 
-                DO receptor = INT(DIST_START), INT(DIST_END), 
-     &                        INT(DIST_STEP)
 
-                    dist = DBLE(receptor)
+            do receptor = 1, 3, 1
+
+             if(receptor.eq.1) then
+             dist = distance(n)
+             elseif(receptor.eq.2) then
+             dist = distanceveg(n)
+             elseif(receptor.eq.3) then
+             dist = distancecow(n)
+             else
+             endif
+
 
 c === Compute Gaussian plume dispersion parameters ===
 
@@ -524,8 +544,8 @@ c
 c Concentration output as Ci/m3 and dose as mrem/year
 
                     WRITE(13, 3000) N, TRIM(radname(n,m)), dist,
-     &                  tempconc, tempdose, tempvegdose, tempcowdose,
-     &                  altconc, altdose, altdoseb, altdosec
+     &                  tempconc, tempdose, tempvegdose, tempcowdose
+   
 
 c ===================================================================
 c SUBSECTION 11c: ACCUMULATE DOSES AT SPECIFIED RECEPTOR DISTANCES
@@ -536,7 +556,7 @@ c distances (meat/milk, vegetable, or general population). When distance
 c matches (within 0.1m tolerance), accumulate dose totals and track
 c iodine-specific doses separately.
 
-                    IF (ABS(dist - distancecow(n)) < 0.1d0) THEN
+                    IF (receptor.eq.3) THEN
                         totcowdose = totcowdose + tempcowdose
                         cowdose(n,m) = tempcowdose
                         IF (radname(n,m)(1:2) .EQ. 'I-') THEN
@@ -544,7 +564,7 @@ c iodine-specific doses separately.
                         ENDIF
                     ENDIF
 
-                    IF (ABS(dist - distanceveg(n)) < 0.1d0) THEN
+                    IF (receptor.eq.2) THEN
                         totvegdose = totvegdose + tempvegdose
                         vegdose(n,m) = tempvegdose
                         IF (radname(n,m)(1:2) .EQ. 'I-') THEN
@@ -552,7 +572,7 @@ c iodine-specific doses separately.
                         ENDIF
                     ENDIF
 
-                    IF (ABS(dist - distance(n)) < 0.1d0) THEN
+                    IF (receptor.eq.1) THEN
                         alldose = alldose + tempdose
                         dose(n,m) = tempdose
                         IF (radname(n,m)(1:2) .EQ. 'I-') THEN
@@ -611,6 +631,12 @@ c ============================================================================
         WRITE(12, 1004) TRIM(poc)
         WRITE(12, 1005) TRIM(phone)
 
+        WRITE(12, 2001)
+        WRITE(12, 2000) altdose_total
+        WRITE(12, 2003) idose + itotvegdose + itotcowdose
+        WRITE(12, 2002)
+
+
         DO N = 1, nstacks
             WRITE(12, 2001)
             WRITE(12, 1006) N
@@ -630,7 +656,7 @@ c ============================================================================
             DO M = 1, nrads(n)
                 WRITE(12, 2002)
                 WRITE(12, 1019) TRIM(radname(n,m))
-                WRITE(12, 1020) rademis(n,m)
+                WRITE(12, 1020) rademis(n,m)*60.*60.*24.*365.
                 WRITE(12, 1021) 
      &              (dose(n,m) + vegdose(n,m) + cowdose(n,m))
                 WRITE(12, 1022) dose(n,m)
@@ -639,17 +665,6 @@ c ============================================================================
             ENDDO
         ENDDO
 
-!        WRITE(12, 2002)
-!        WRITE(12, 2001)
-        WRITE(12, 2001)
-        WRITE(12, 2000) altdose_total
-        WRITE(12, 2002)
-        
-        IF (altdose_total > 0.0d0) THEN
-            WRITE(12, 2005) totvegdose / altdose_total
-            WRITE(12, 2006) totcowdose / altdose_total
-            WRITE(12, 2007) alldose / altdose_total
-        ENDIF
 
 !        WRITE(12, 2001)
         WRITE(12, 2001)
@@ -697,18 +712,19 @@ c ============================================================================
  1017 FORMAT('Distance from source to meat/milk receptor (m): ', F10.1)
  1018 FORMAT('Assumed wind speed (m/s) when no wind rose: ', F10.1)
  1019 FORMAT('Radionuclide: ', A)
- 1020 FORMAT('Emission rate (Ci/s): ', E25.16)
+ 1020 FORMAT('Emission rate (Ci/y): ', ES9.2)
  1021 FORMAT('Effective dose equivalent all pathways (mrem/yr): ',
-     &       E25.16)
+     &       ES9.2)
  1022 FORMAT('Effective dose equivalent non-ingestion (mrem/yr): ',
-     &       E25.16)
+     &       ES9.2)
  1023 FORMAT('Effective dose equivalent vegetables (mrem/yr): ',
-     &       E25.16)
+     &       ES9.2)
  1024 FORMAT('Effective dose equivalent meat/milk (mrem/yr): ',
-     &       E25.16)
+     &       ES9.2)
 
- 2000 FORMAT('Total effective dose equivalent all stacks (mrem/yr): ',
-     &       F10.2)
+ 2000 FORMAT('Effective dose equivalent all stacks (mrem/yr): ',
+     &       ES9.2)
+ 2003 FORMAT('Effective dose equivalent all stacks from iodine (mrem/yr): ',ES9.2)
  2001 FORMAT('-------------------------------------------'//
      &       '-------------------------------------------')
  2002 FORMAT(' ')
@@ -719,11 +735,11 @@ c ============================================================================
  2100 FORMAT('Execution date/time (MM/DD/YYYY HH:MM): ',
      &       I2.2, '/', I2.2, '/', I4, ' ', I2.2, ':', I2.2)
 
- 3000 FORMAT(I3, ',', A, ',', F8.1, 8(',', E16.8))
- 3001 FORMAT('STACK,RADNAME,DISTANCE,CONC,WBDOSE,VEGDOSE,COWDOSE,',
-     &       'ALTCONC,ALTWB,ALTVEG,ALTCOW')
+ 3000 FORMAT(I3, ',', A, ',', F8.1, 4(',', ES16.8))
+ 3001 FORMAT('STACK,NUCLIDE,DISTANCE(m),CONC(Ci/m3),TOTALDOSE(mrem/yr),'
+     &    'VEGDOSE(mrem/yr),COWDOSE(mrem/yr)')
 
- 4000 FORMAT('COMPLY version 2.0beta level 3 - GitHub distribution')
+ 4000 FORMAT('COMPLY version 2.0 level 3')
 
 c ============================================================================
 c SECTION 16: PROGRAM TERMINATION

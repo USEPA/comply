@@ -1,38 +1,116 @@
-COMPLY version 2.0 level 4 distributed through GitHub
------------------------------------------------------------------------
-Project:Test Project                                                                                                                                                                                            
-Company:Vandalay Industries                                                                                                                                                                                     
-Facility:Reactor A                                                                                                                                                                                               
-Address:100 Main Street                                                                                                                                                                                         
-Point of Contact:Contact Person                                                                                                                                                                                          
-Phone Number:919-000-0000                                                                                                                                                                                            
-Air temperature (F):      55.0
-Rainfall rate (m/yr):       1.0
------------------------------------------------------------------------
-Stack number:  1
-Latitude (degrees):  37.54070
-Longitude (degrees): -77.43600
-Release height (m):      25.0
-Stack diameter (m):       0.0
-Flow rate (m3/s):       0.0
-Stack temperature (F):      55.0
-Vertical momentum (YES/NO):NO 
-Building height (m):      20.0
-Building width (m):      50.0
-Distance from source to receptor (m):     240.0
-Rainfall rate (m/yr):       1.0
-Number of radionuclides: 3
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+COMPLY version 2.0 level 4 Dose Summary Report
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
  
-Max dose receptor     240. m downwind in sector ENE
+          Project:Test Project
+          Company:Vandalay Industries
+         Facility:Reactor A
+          Address:100 Main Street
+ Point of Contact:Contact Person
+     Phone Number:919-000-0000
  
-Radionuclide,Emissions,Concentration,Total Dose,Immersion,Inhalation,Surface,Meat,Milk,Vegetable
-I-131   , 0.320E-09, 0.310E-02, 0.621E-02, 0.593E-05, 0.817E-03, 0.128E-02, 0.163E-03, 0.120E-02, 0.275E-02
-SE-75   , 0.160E-08, 0.155E-01, 0.355E-01, 0.307E-04, 0.105E-02, 0.266E-01, 0.338E-02, 0.762E-03, 0.367E-02
-SR-85   , 0.939E-08, 0.909E-01, 0.113E+00, 0.233E-03, 0.366E-02, 0.104E+00, 0.377E-04, 0.914E-04, 0.406E-02
------------------------------------------------------------------------
-Total effective dose equivalent all stacks (mrem/yr): 0.154E+00
------------------------------------------------------------------------
+------------------------------------------------------------------------------
+DOSE ESTIMATES
  
------------------------------------------------------------------------
+Effective dose equivalent all stacks (mrem/year):    0.1553
+Effective dose equivalent all stacks from iodine (mrem/year):    0.0062
  
-Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM): 9/21/2026 10:22
+ 
+ 
+Stack number                   :  1
+Maximum dose receptor was located at     240. m downwind in sector ENE
+ 
+          ..........................Dose reported in mrem/year..............................    (Ci/yr)   (pCi/m3)
+Nuclide , Total Dose, Inhalation,  Immersion,    Surface,       Meat,       Milk,  Vegetable, Emissions ,  Concen
+I-131   ,  6.170E-03,  8.158E-04,  5.920E-06,  1.281E-03,  1.142E-04,  1.205E-03,  2.748E-03,  1.010E-02,  3.100E-03
+SE-75   ,  3.581E-02,  1.050E-03,  3.069E-05,  2.681E-02,  3.443E-03,  7.774E-04,  3.697E-03,  5.050E-02,  1.550E-02
+SR-85   ,  1.133E-01,  3.656E-03,  2.326E-04,  1.052E-01,  3.842E-05,  9.333E-05,  4.091E-03,  2.960E-01,  9.084E-02
+ 
+------------------------------------------------------------------------------
+STACK INFORMATION
+ 
+Stack number                   :  1
+Stack latitude (degrees)       :  37.54070
+Stack longitude (degrees)      : -77.43600
+Release height (m)             :      25.0
+Stack diameter (m)             :       0.0
+Flow rate (m3/s)               :       0.3
+Stack temperature (F)          :      55.0
+Vertical momentum (YES/NO)     :NO
+Building height (m)            :      20.0
+Building width (m)             :      50.0
+Number of radionuclides        : 3
+Veg distance(m),downwind sector:     240.0 ENE
+Milk dist(m),downwind sector   :    2500.0 ENE
+Meat dist(m),downwind sector   :    2000.0 ENE
+ 
+------------------------------------------------------------------------------
+RADIONUCLIDE AND DECAY CHAIN DATA
+ 
+Halflife expressed in days and dry deposition in m/day
+Immersion dose coefficients expressed as mrem/year per Ci/m3
+Surface dose coefficients expressed as mrem/year per Ci/m2
+Inhalation and ingestion dose coefficients expressed as mrem/Ci
+ 
+ 
+Nuclide and chain length:  I-131     2.
+  Nuclide   Halflife  DryDepVel  Inhalat.  Immers.   Surface  Ingestion
+  I-131      8.0E+00   8.6E+02   3.3E+07   1.9E+09   4.0E+07   5.3E+07
+  XE-131M    1.2E+01   0.0E+00   0.0E+00   4.3E+07   1.8E+06   0.0E+00
+ 
+Nuclide and chain length:  SE-75     1.
+  Nuclide   Halflife  DryDepVel  Inhalat.  Immers.   Surface  Ingestion
+  SE-75      1.2E+02   2.1E+02   8.5E+06   2.0E+09   4.3E+07   9.6E+06
+ 
+Nuclide and chain length:  SR-85     1.
+  Nuclide   Halflife  DryDepVel  Inhalat.  Immers.   Surface  Ingestion
+  SR-85      6.5E+01   2.1E+02   5.0E+06   2.6E+09   5.3E+07   2.0E+06
+ 
+ 
+------------------------------------------------------------------------------
+METEOROLOGY
+ 
+Rainfall rate (m/yr)         :       1.0
+Air temperature (F)          :      55.0
+Calm winds (fraction)        :     0.119
+ 
+Sector winds from,frequency(fraction),speed(m/s)
+N                ,         0.053     ,     4.100
+NNE              ,         0.029     ,     3.900
+NE               ,         0.029     ,     3.800
+ENE              ,         0.033     ,     3.900
+E                ,         0.041     ,     3.900
+ESE              ,         0.039     ,     4.200
+SE               ,         0.041     ,     3.900
+SSE              ,         0.033     ,     3.900
+S                ,         0.051     ,     4.000
+SSW              ,         0.049     ,     4.500
+SW               ,         0.086     ,     4.900
+WSW              ,         0.118     ,     5.400
+W                ,         0.104     ,     5.400
+WNW              ,         0.073     ,     5.400
+NW               ,         0.059     ,     4.900
+NNW              ,         0.043     ,     4.500
+ 
+Sector winds to  ,downwind receptor(m),sector total dose(mrem/yr)
+S                ,        200.000     , 8.17E-03
+SSW              ,        225.000     , 4.70E-03
+SW               ,        230.000     , 4.83E-03
+WSW              ,        210.000     , 5.35E-03
+W                ,        220.000     , 6.65E-03
+WNW              ,        220.000     , 5.87E-03
+NW               ,        230.000     , 6.65E-03
+NNW              ,        250.000     , 5.35E-03
+N                ,        240.000     , 8.06E-03
+NNE              ,        270.000     , 6.89E-03
+NE               ,        230.000     , 1.11E-02
+ENE              ,        240.000     , 1.38E-02
+W                ,        280.000     , 1.22E-02
+ESE              ,        220.000     , 8.55E-03
+SE               ,        220.000     , 7.61E-03
+SSE              ,        210.000     , 6.04E-03
+------------------------------------------------------------------------------
+ 
+Date/Time (LST) stamp of code execution (MM/DD/YYYY HH:MM) --> 10/26/2026 10:10
