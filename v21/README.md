@@ -9,6 +9,7 @@ New features, major updates, and bug fixes are described below compared to COMPL
 * Decay chains updated to be consistent with CAP88 v4.1.1
 * Half-life data updated to be consistent with CAP88 v4.1.1
 * COMPLY v2.1 has decay rates and decay chains for 1252 nuclides compared to 826 in COMPLY v2.0
+* COMPLY v2.1 has up to 30 progeny in a decay chain compared to 19 in COMPLY v2.0
 * Ingestion transfer update information updated to be consistent with CAP88 v4.1.1 where feasible
   
 ### Bug Fixes
