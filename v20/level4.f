@@ -126,7 +126,7 @@ c locations for immersion, inhalation, surface deposition, and ingestion
       REAL*8, ALLOCATABLE :: totihdose(:,:)         !total inhalation dose per stack/radionuclide
       REAL*8, ALLOCATABLE :: totsurfdose(:,:)       !total surface dose per stack/radionuclide
       REAL*8, ALLOCATABLE :: totingdose(:,:)        !total ingestion dose per stack/radionuclide
-      REAL*8, ALLOCATABLE :: sectordose(:)          !total dose by sector bin
+      REAL*8, ALLOCATABLE :: sectordose(:,:)        !total dose by sector bin
 
 c ============================================================================
 c SECTION 8: DYNAMIC ARRAY DECLARATIONS - PATHWAY-SPECIFIC DOSES
@@ -139,14 +139,17 @@ c at specific receptor locations
       REAL*8, ALLOCATABLE :: meatdose(:,:)          !radionuclide dose by meat (mrem/yr)
 
 c ============================================================================
-c SECTION 9: DYNAMIC ARRAY DECLARATIONS - METEOROLOGICAL DATA BY SECTOR
+c SECTION 9: DYNAMIC ARRAY DECLARATIONS - METEOROLOGICAL DATA
 c ============================================================================
-c These arrays store wind direction sector information (frequency, speed,
-c source-receptor distance) for computing sector-dependent air concentrations
 
-      REAL*8, ALLOCATABLE :: windbinfreq(:)       !Sector (wind dir) frequency from that direction
-      REAL*8, ALLOCATABLE :: windbinspeed(:)      !Sector (wind dir) average speed from that direction (m/s)
-      REAL*8, ALLOCATABLE :: windbinsrdist(:)     !Sector (wind dir) source-receptor distance (m)
+      REAL*8, ALLOCATABLE :: windbinfreq(:,:)       !Sector (wind dir) frequency from that direction
+      REAL*8, ALLOCATABLE :: windbinspeed(:,:)      !Sector (wind dir) average speed from that direction (m/s)
+      REAL*8, ALLOCATABLE :: windbinsrdist(:,:)     !Sector (wind dir) source-receptor distance (m)
+      REAL*8, ALLOCATABLE :: rainfall(:)            !rainfall rate (m/yr)
+      REAL*8, ALLOCATABLE :: airtemp(:)             !air temperature (C)
+      REAL*8, ALLOCATABLE :: pctcalm(:)             !frequency of calm winds
+
+      INTEGER, ALLOCATABLE :: nwindbins(:)          !number of wind direction bins at each stack
 
 c ============================================================================
 c SECTION 10: DYNAMIC ARRAY DECLARATIONS - INDEXING & METADATA
@@ -156,8 +159,8 @@ c ============================================================================
       INTEGER RECEP(16)
 
       CHARACTER*8,  ALLOCATABLE :: radname(:,:)         !radionuclide names at each stack
-      CHARACTER*3,  ALLOCATABLE :: windbinname(:)       !wind direction sector 
-      CHARACTER*3,  ALLOCATABLE :: sectorname(:)        !sector name for receptors
+      CHARACTER*3,  ALLOCATABLE :: windbinname(:,:)     !wind direction sector 
+      CHARACTER*3,  ALLOCATABLE :: sectorname(:,:)      !sector name for receptors
       CHARACTER*3,  ALLOCATABLE :: vegsector(:)         !Sector (wind dir) location of vegetables
       CHARACTER*3,  ALLOCATABLE :: milksector(:)        !Sector (wind dir) location of cow/milk
       CHARACTER*3,  ALLOCATABLE :: meatsector(:)        !Sector (wind dir) location of meat
@@ -167,6 +170,11 @@ c ============================================================================
       CHARACTER*3,  ALLOCATABLE :: verticalmomentum(:)  !vertical momentum (YES or NO)
       CHARACTER*3,  ALLOCATABLE :: maxsector(:)         !maximum downwind sector of max. conc.
 
+      CHARACTER*200,  ALLOCATABLE :: windsource(:)      !Source of wind data
+      CHARACTER*200,  ALLOCATABLE :: winddates(:)       !Date coverage of wind data
+      CHARACTER*200,  ALLOCATABLE :: windloc(:)         !Location of wind data
+      CHARACTER*200,  ALLOCATABLE :: winddist(:)        !Distance from wind data to source
+
 c ============================================================================
 c SECTION 11: STATIC VARIABLE DECLARATIONS - DISPERSION CALCULATION TERMS
 c ============================================================================
@@ -174,16 +182,6 @@ c These variables are used in the Gaussian plume model calculations for
 c atmospheric dispersion and effective stack height corrections
 
       CHARACTER*200 title,company,facility,address,poc,phone !facility metadata
-      CHARACTER*200 windsource     !Source of wind data
-      CHARACTER*200 winddates      !Date coverage of wind data
-      CHARACTER*200 windloc        !Location of wind data
-      CHARACTER*200 winddist       !Distance from wind data to source
-
-      INTEGER nwindbins            !number of wind direction bins at each stack
-
-      REAL*8 rainfall              !rainfall rate (m/yr)
-      REAL*8 airtemp               !air temperature (C)
-      REAL*8 pctcalm               !frequency of calm winds 
 
       REAL*8 FACTOR,FACTORB,FACTORC,FACTORD,FACTORE,FACTORF
       REAL*8 FACTORG,FACTORH,FACTORI,FACTORJ,FACTORK,FACTORL,FACTORM,FACTORN
@@ -204,6 +202,7 @@ c STATIC VARIABLE DECLARATIONS - CONTROL & LOOP INDICES
       INTEGER nchain                                !number of nuclides in the decay series
       INTEGER maxsect
       INTEGER nrads_max, progeny_max
+      INTEGER flag
 
       CHARACTER*200 inline
       CHARACTER*8 NUC
@@ -279,7 +278,6 @@ c results reporting
  
       open(11,file='input.level4.txt',status='old',form='formatted')
       open(12,file='output.level4.txt',status='unknown',form='formatted')
-      open(13,file='diag.level4.txt',status='unknown',form='formatted')
 
       open(9,file='comply171_original_input_data.csv',status='old',form='formatted')
       open(10,file='comply171_original_decaychain_data.csv',status='old',form='formatted')
@@ -296,71 +294,12 @@ c Read project metadata and determine the number of stacks to process
        read(11,'(38x,a)') poc
        read(11,'(38x,a)') phone
        read(11,'(38x,a3)') diagflag
-       read(11,'(38x,i3)') nstacks
-
-       read(11,'(a)') !blank spacer to improve readability of the input file
-
-       read(11,'(38x,a)') windsource
-       read(11,'(38x,a)') winddates
-       read(11,'(38x,a)') windloc
-       read(11,'(38x,a)') winddist
-       read(11,'(38x,f10.5)') airtemp
-       read(11,'(38x,f10.5)') rainfall
-       read(11,'(38x,i3)') nwindbins
-
-       allocate(windbinname(nwindbins))
-       allocate(windbinfreq(nwindbins))
-       allocate(windbinspeed(nwindbins))
-       allocate(windbinsrdist(nwindbins))
-       allocate(sectorname(nwindbins))
-       allocate(sectordose(nwindbins))
-
-       sum = 0.0
-       do m = 1, nwindbins
        read(11,'(38x,a)') inline
-       read(inline,*) windbinname(m),windbinfreq(m),windbinspeed(m)
-       sum = sum + windbinfreq(m)
-       enddo !end loop over reading in wind data and source-receptor distances
+       read(inline,*) nstacks
 
-       airtemp = airtemp * (9.D0/5.D0) + 32.D0 !convert C to F
-       rainfall = rainfall / 100.D0 !convert cm to m
-
-       !QA checks on the wind inputs
-       if(nwindbins.eq.1) then
-        windbinfreq(1) = 0.25
-       endif
-
-       if(sum.lt.1.0.and.nwindbins.gt.1) then
-        pctcalm = 1 - sum
-       elseif(sum.gt.1.0.and.nwindbins.gt.1) then
-        write(*,*)'ERROR! Sum of wind frequencies exceed 1.0'
-        stop
-       else
-        pctcalm = 0.0
-       endif
-        write(*,*)'Percent calms = ',pctcalm  
-
-!        do m = 1, nwindbins
-!        write(*,*)windbinname(m),windbinfreq(m),windbinspeed(m),windbinsrdist(m),sectorname(m)
-!        enddo
-
-       read(11,'(a)') !blank spacer to improve readability of the input file
-
-       if(nwindbins.eq.1) then !simple conservative estimate of winds no wind rose
-       read(11,'(38x,a)') inline
-       read(inline,*) sectorname(1),windbinsrdist(1)
-       else !full 16 direction wind rose
-       do m = 1, nwindbins
-       read(11,'(38x,a)') inline
-       read(inline,*) sectorname(RECEP(m)),windbinsrdist(RECEP(m))
-       enddo !end loop over reading in wind data and source-receptor distances
-       endif
-
-c ============================================================================
-c SECTION 16: MEMORY ALLOCATION - ALLOCATE STACK-LEVEL PARAMETER ARRAYS
-c ============================================================================
-c Allocate arrays to store stack-specific parameters (heights, distances,
-c temperatures, etc.) based on the number of stacks
+! ============================================================================
+! SECTION 16: MEMORY ALLOCATION - ALLOCATE STACK-LEVEL ARRAYS
+! ============================================================================
 
        allocate(latitude(nstacks))
        allocate(longitude(nstacks))
@@ -380,6 +319,14 @@ c temperatures, etc.) based on the number of stacks
        allocate(meatsector(nstacks))
        allocate(nrads(nstacks))
        allocate(maxsector(nstacks))
+       allocate(windsource(nstacks))
+       allocate(winddates(nstacks))
+       allocate(windloc(nstacks))
+       allocate(winddist(nstacks))
+       allocate(airtemp(nstacks))
+       allocate(rainfall(nstacks))
+       allocate(nwindbins(nstacks))
+       allocate(pctcalm(nstacks))
 
        nrads_max = 3000 !maximum number of radionuclides possible per stack
 
@@ -443,6 +390,69 @@ c temperatures, etc.) based on the number of stacks
        allocate(yfmilk(19))
        allocate(yfmeat(19))
 
+       allocate(windbinname(nstacks,16))
+       allocate(windbinfreq(nstacks,16))
+       allocate(windbinspeed(nstacks,16))
+       allocate(windbinsrdist(nstacks,16))
+       allocate(sectorname(nstacks,16))
+       allocate(sectordose(nstacks,16))
+
+!======================================================
+
+
+       do n = 1, nstacks 
+
+       read(11,'(a)') !blank spacer to improve readability of the input file
+       read(11,'(38x,a)') windsource(n)
+       read(11,'(38x,a)') winddates(n)
+       read(11,'(38x,a)') windloc(n)
+       read(11,'(38x,a)') winddist(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) airtemp(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) rainfall(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) nwindbins(n)
+
+
+       sum = 0.0
+       do m = 1, nwindbins(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) windbinname(n,m),windbinfreq(n,m),windbinspeed(n,m)
+       sum = sum + windbinfreq(n,m)
+       enddo !end loop over reading in wind data and source-receptor distances
+
+       airtemp(n) = airtemp(n) * (9.D0/5.D0) + 32.D0 !convert C to F
+       rainfall(n) = rainfall(n) / 100.D0 !convert cm to m
+
+       !QA checks on the wind inputs
+       if(nwindbins(n).eq.1) then
+        windbinfreq(n,1) = 0.25
+       endif
+
+       if(sum.lt.1.0.and.nwindbins(n).gt.1) then
+        pctcalm(n) = 1 - sum
+       elseif(sum.gt.1.0.and.nwindbins(n).gt.1) then
+        write(*,*)'ERROR! Sum of wind frequencies exceed 1.0'
+        stop
+       else
+        pctcalm(n) = 0.0
+       endif
+        write(*,*)'Percent calms = ',pctcalm(n)
+
+       read(11,'(a)') !blank spacer to improve readability of the input file
+
+       if(nwindbins(n).eq.1) then !simple conservative estimate of winds no wind rose
+       read(11,'(38x,a)') inline
+       read(inline,*) sectorname(n,1),windbinsrdist(n,1)
+       else !full 16 direction wind rose
+       do m = 1, nwindbins(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) sectorname(n,RECEP(m)),windbinsrdist(n,RECEP(m))
+       enddo !end loop over reading in wind data and source-receptor distances
+       endif
+
+
 c ============================================================================
 c SECTION 17: INPUT PARSING LOOP - READ STACK-SPECIFIC PARAMETERS
 c ============================================================================
@@ -450,33 +460,47 @@ c Main loop to read input parameters for each stack source. Includes
 c geometrical parameters, temperatures, distances to receptors, and
 c number of emitted radionuclides
 
-       do n = 1, nstacks 
 
        read(11,'(a)') !blank spacer to improve readability of the input file
-       read(11,'(38x,f10.5)') latitude(n)
-       read(11,'(38x,f10.5)') longitude(n)
-       read(11,'(38x,f10.5)') releaseht(n)
-       read(11,'(38x,f10.5)') bldheight(n)
-       read(11,'(38x,f10.5)') bldwidth(n)
-       read(11,'(38x,f10.5)') flowrate(n)
-       read(11,'(38x,f10.5)') diameter(n)
-       read(11,'(38x,f10.5)') stacktemp(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) latitude(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) longitude(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) releaseht(n)
+       read(11,'(38x,a)') inline
+       read(inline,*)  bldheight(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) bldwidth(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) flowrate(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) diameter(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) stacktemp(n)
+
        read(11,'(38x,a)') verticalmomentum(n)
-       read(11,'(38x,f10.5)') distanceveg(n)
-       read(11,'(38x,f10.5)') distancemilk(n)
-       read(11,'(38x,f10.5)') distancemeat(n)
+
+       read(11,'(38x,a)') inline
+       read(inline,*)  distanceveg(n)
+       read(11,'(38x,a)') inline
+       read(inline,*)  distancemilk(n)
+       read(11,'(38x,a)') inline
+       read(inline,*)  distancemeat(n)
+
        read(11,'(38x,a)') vegsector(n)
        read(11,'(38x,a)') milksector(n)
        read(11,'(38x,a)') meatsector(n)
 
-       read(11,'(38x,i5)') nrads(n)
+       read(11,'(38x,a)') inline
+       read(inline,*) nrads(n)
 
        stacktemp(n) = stacktemp(n) * (9.D0/5.D0) + 32.D0 !convert C to F
 
-       if(nwindbins.eq.1) then !if simple test make sure all downwind receptor sectors are the same
-        vegsector(1) = sectorname(1)
-        milksector(1) = sectorname(1)
-        meatsector(1) = sectorname(1)
+       if(nwindbins(n).eq.1) then !if simple test make sure all downwind receptor sectors are the same
+        vegsector(1) = sectorname(n,1)
+        milksector(1) = sectorname(n,1)
+        meatsector(1) = sectorname(n,1)
        endif
 
 c ============================================================================
@@ -557,7 +581,6 @@ c emission rates (in Ci/s)
 
        enddo !end loop over reading in stacks
 
-
 !       do n = 1, nstacks
 !       do m = 1, nrads(n)
 !       write(*,*)'===================================='
@@ -589,8 +612,8 @@ c ============================================================================
        alldose = 0.
        idose = 0.
 
-       do j = 1, nwindbins
-       sectordose(j) = 0.0
+       do j = 1, nwindbins(n)
+       sectordose(n,j) = 0.0
        enddo
 
 c ============================================================================
@@ -635,13 +658,12 @@ c ============================================================================
 c Loop over wind direction sectors and receptor distances. For each combination,
 c calculate air concentration and dose contributions across all decay pathways
 
-
-       do j = 1, nwindbins
+       do j = 1, nwindbins(n)
 
        do receptor = 1, 4, 1
 
        if(receptor.eq.1) then
-       dist = windbinsrdist(j)
+       dist = windbinsrdist(n,j)
        elseif(receptor.eq.2) then
        dist = distanceveg(n)
        elseif(receptor.eq.3) then
@@ -651,16 +673,13 @@ c calculate air concentration and dose contributions across all decay pathways
        else
        endif
 
-
        !Air concentration
-       CALL calc_air_concentration( dist, pctcalm, xcrit, releaseht(n), diameter(n), 
+       CALL calc_air_concentration( dist, pctcalm(n), xcrit, releaseht(n), diameter(n), 
      & flowrate(n), stacktemp(n), bldheight(n), bldwidth(n), verticalmomentum(n),
-     & windbinfreq(j), windbinspeed(j), rademis(n,m), altconc, airtemp, transittime)
-
+     & windbinfreq(n,j), windbinspeed(n,j), rademis(n,m), altconc, airtemp(n), transittime)
 
        !Wet deposition
-       CALL wetdep_calc(dist,pctcalm,rainfall,windbinfreq(j),windbinspeed(j),rademis(n,m),altconc,wetdepadj)
-
+       CALL wetdep_calc(dist,pctcalm(n),rainfall(n),windbinfreq(n,j),windbinspeed(n,j),rademis(n,m),altconc,wetdepadj)
 
 c ============================================================================
 c DOSE CALCULATIONS
@@ -756,22 +775,22 @@ c accumulate total dose across all pathways and locations.
 c ============================================================================
 
 
-       if(receptor.eq.2.and.vegsector(n).eq.sectorname(j)) then !vegetable receptor
+       if(receptor.eq.2.and.vegsector(n).eq.sectorname(n,j)) then !vegetable receptor
         alldose = alldose + totvegdose
         vegdose(n,m) = totvegdose
-        write(*,*)'Vegetable dose:',j,radname(n,m),vegdose(n,m),dist,sectorname(j)
+        write(*,*)'Vegetable dose:',j,radname(n,m),vegdose(n,m),dist,sectorname(n,j)
         endif
        
-       if(receptor.eq.3.and.milksector(n).eq.sectorname(j)) then !milk receptor
+       if(receptor.eq.3.and.milksector(n).eq.sectorname(n,j)) then !milk receptor
         alldose = alldose + totmilkdose
         milkdose(n,m) = totmilkdose
-        write(*,*)'Milk dose:',j,radname(n,m),milkdose(n,m),dist,sectorname(j)
+        write(*,*)'Milk dose:',j,radname(n,m),milkdose(n,m),dist,sectorname(n,j)
        endif
 
-       if(receptor.eq.4.and.meatsector(n).eq.sectorname(j)) then !meat receptor
+       if(receptor.eq.4.and.meatsector(n).eq.sectorname(n,j)) then !meat receptor
         alldose = alldose + totmeatdose
         meatdose(n,m) = totmeatdose
-        write(*,*)'Meat dose:',j,radname(n,m),meatdose(n,m),dist,sectorname(j)
+        write(*,*)'Meat dose:',j,radname(n,m),meatdose(n,m),dist,sectorname(n,j)
        endif
  
 c ============================================================================
@@ -787,7 +806,7 @@ c ============================================================================
             tempdose = immersion + inhalation + surface
         if(tempdose.gt.maxdose) then 
             maxdose = tempdose
-            maxsector(n) = sectorname(j)
+            maxsector(n) = sectorname(n,j)
             distancemei(n) = dist
             totsurfdose(n,m) = surface
             totimdose(n,m) = immersion
@@ -799,9 +818,8 @@ c ============================================================================
        enddo !end loop over distances between source and receptor (receptor)
 
        !make a sector total for output report
-       sectordose(j) = sectordose(j) + 
+        sectordose(n,j) = sectordose(n,j) + 
      &  immersion+inhalation+surface+totvegdose+totmilkdose+totmeatdose
-
        enddo !end loop over number of wind direction bins (j)
 
 c ============================================================================
@@ -812,7 +830,7 @@ c and total dose at the maximum dose receptor location.
 c ============================================================================
 
  2999  FORMAT(a30,a10,f30.15)
- 3100  FORMAT(a,f15.4)
+ 3100  FORMAT(a,ES9.2)
 
        if(radname(n,m)(1:2).eq.'I-') then
        idose = idose + totihdose(n,m)+totimdose(n,m)+totsurfdose(n,m)+
@@ -876,12 +894,12 @@ c ============================================================================
        write(12,2001)
 
  1102 FORMAT('DOSE ESTIMATES')
- 1100 FORMAT('Effective dose equivalent all stacks (mrem/year):',f10.4)
+ 1100 FORMAT('Effective dose equivalent all stacks (mrem/year):',ES9.2)
        write(12,1102)
        write(12,2002)
        write(12,1100) alldose
 
- 1111 FORMAT('Effective dose equivalent all stacks from iodine (mrem/year):',f10.4)
+ 1111 FORMAT('Effective dose equivalent all stacks from iodine (mrem/year):',ES9.2)
        write(12,1111) idose
 
        write(12,2002)
@@ -953,6 +971,46 @@ c ============================================================================
        enddo
 
 
+
+ 1025 FORMAT('METEOROLOGY')
+ 1018 FORMAT('Rainfall rate (m/yr)         :',f10.1)
+ 1013 FORMAT('Air temperature (F)          :',f10.1)
+ 1022 FORMAT('Calm winds (fraction)        :',f10.3)
+ 1023 FORMAT('Sector winds from,frequency(fraction),speed(m/s)')
+ 1024 FORMAT(a3,14x,',',4x,f10.3,5x,',',f10.3)
+ 1026 FORMAT('Sector winds to  ,downwind receptor(m),sector total dose(mrem/yr)')
+ 1027 FORMAT(a3,14x,',',5x,f10.3,5x,',',ES9.2)
+
+       write(12,2002)
+       write(12,2001)
+       write(12,1025)
+       write(12,2002)
+       write(12,2002)
+
+       do n = 1, nstacks
+       write(12,2002)
+       write(12,1006) n
+       write(12,1018) rainfall(n)
+       write(12,1013) airtemp(n)
+       write(12,1022) pctcalm(n)
+       write(12,1023)
+
+        do m = 1, nwindbins(n)
+        write(12,1024)windbinname(n,m),windbinfreq(n,m),windbinspeed(n,m)
+        enddo
+
+        write(12,2002)
+        write(12,1026)
+
+        do m = 1, nwindbins(n)
+        write(12,1027)sectorname(n,m),windbinsrdist(n,m),sectordose(n,m)
+        enddo
+       enddo
+
+
+        flag = 1
+        if (flag.eq.1) then !output decay chain info to output file
+
  1130 FORMAT('RADIONUCLIDE AND DECAY CHAIN DATA')
  1131 FORMAT('Nuclide and chain length:',a10,1x,f3.0)
  1132 FORMAT(a10,6(1x,ES9.1))
@@ -984,38 +1042,8 @@ c ============================================================================
        write(12,2002)
        enddo
        enddo
- 
 
- 1025 FORMAT('METEOROLOGY')
- 1018 FORMAT('Rainfall rate (m/yr)         :',f10.1)
- 1013 FORMAT('Air temperature (F)          :',f10.1)
- 1022 FORMAT('Calm winds (fraction)        :',f10.3)
- 1023 FORMAT('Sector winds from,frequency(fraction),speed(m/s)')
- 1024 FORMAT(a3,14x,',',4x,f10.3,5x,',',f10.3)
- 1026 FORMAT('Sector winds to  ,downwind receptor(m),sector total dose(mrem/yr)')
- 1027 FORMAT(a3,14x,',',5x,f10.3,5x,',',ES9.2)
-
-       write(12,2002)
-       write(12,2001)
-       write(12,1025)
-       write(12,2002)
-       write(12,1018) rainfall
-       write(12,1013) airtemp
-       write(12,1022) pctcalm
-       write(12,2002)
-       write(12,1023)
-
-        do m = 1, nwindbins
-        write(12,1024)windbinname(m),windbinfreq(m),windbinspeed(m)
-        enddo
-
-        write(12,2002)
-        write(12,1026)
-
-        do m = 1, nwindbins
-        write(12,1027)sectorname(m),windbinsrdist(m),sectordose(m)
-        enddo
-
+       endif !condition on writing decay chain info to output file
 
 c ============================================================================
 c EXECUTION TIMESTAMP
@@ -1050,6 +1078,7 @@ c ============================================================================
        if(diagflag.eq.'YES'.or.diagflag.eq.'TRUE'.or.
      &    diagflag.eq.'yes'.or.diagflag.eq.'true') then
 
+       open(13,file='diag.level4.txt',status='unknown',form='formatted')
        write(13,3002) !write units to header
        write(13,3001) !write header to file
 
@@ -1064,24 +1093,25 @@ c ============================================================================
        totvegdose = 0.
        totmeatdose = 0.
 
-       xcrit = 0.0
+       !xcrit = 0.0
+       xcrit = 2.5 * sqrt(bldwidth(n) * bldheight(n))
        if(releaseht(n).eq.0.0) then !surface release
        bldwidth(n) = 0.0 !odd that comply assumes no release shape geometry for a surface (area) release
        bldheight(n) = 0.0
        endif
 
-       do j = 1, nwindbins
+       do j = 1, nwindbins(n)
        do receptor = 25, 50000, 25
        dist = float(receptor)
 
        !Air concentration
-       CALL calc_air_concentration( dist, pctcalm, xcrit, releaseht(n), diameter(n),
+       CALL calc_air_concentration( dist, pctcalm(n), xcrit, releaseht(n), diameter(n),
      & flowrate(n), stacktemp(n), bldheight(n), bldwidth(n), verticalmomentum(n),
-     & windbinfreq(j), windbinspeed(j), rademis(n,m), altconc, airtemp, transittime)
+     & windbinfreq(n,j), windbinspeed(n,j), rademis(n,m), altconc, airtemp(n), transittime)
 
 
        !Wet deposition
-       CALL wetdep_calc(dist,pctcalm,rainfall,windbinfreq(j),windbinspeed(j),rademis(n,m),altconc,wetdepadj)
+       CALL wetdep_calc(dist,pctcalm(n),rainfall(n),windbinfreq(n,j),windbinspeed(n,j),rademis(n,m),altconc,wetdepadj)
 
          nchain = int(radchainlen(n,m))
 
@@ -1162,7 +1192,7 @@ c ============================================================================
  3001  FORMAT('STACK,NUCLIDE,SECTOR,DISTANCE,CONC,TOTALDOSE,IMMERSION,INHALATION,SURFACE,MEAT,MILK,VEG')
  3002  FORMAT('# Distance as m; Concentration as Ci/m3; all dose units are mrem/year')
 
-       write(13,3000) n,radname(n,m),sectorname(j),dist,
+       write(13,3000) n,radname(n,m),sectorname(n,j),dist,
      &     altconc,
      &     (immersion+inhalation+surface+totmeatdose+totmilkdose+totvegdose),
      &     immersion,inhalation,surface,totmeatdose,totmilkdose,totvegdose
@@ -1180,13 +1210,13 @@ c ============================================================================
 c START OF SUBROUTINES
 c ============================================================================
 
-       SUBROUTINE calc_air_concentration(dist, pctcalm, xcrit, 
+       SUBROUTINE calc_air_concentration(dist, xpctcalm, xcrit, 
      & xreleaseht, xdiameter, xflowrate, xstacktemp, xbldheight, xbldwidth, xverticalmomentum, 
-     & xwindbinfreq, xwindbinspeed, xrademis, xconc, airtemp, transittime)
+     & xwindbinfreq, xwindbinspeed, xrademis, xconc, xairtemp, transittime)
 
        IMPLICIT NONE
 
-       REAL*8  :: dist, pctcalm, xcrit, airtemp
+       REAL*8  :: dist, xpctcalm, xcrit, xairtemp
        REAL*8  :: xreleaseht, xdiameter, xflowrate, xstacktemp
        REAL*8  :: xbldheight, xbldwidth, xwindbinfreq, xwindbinspeed
        REAL*8  :: xrademis
@@ -1214,9 +1244,9 @@ c ============================================================================
        IF (xreleaseht .GT. 2.5D0 * xbldheight .or. xreleaseht.eq. 0.0D0) THEN
 
        ! Temperature and density
-       RHOAIR = 0.0735D0 * (80.0D0 + 460.0D0) / (airtemp + 460.0D0)
+       RHOAIR = 0.0735D0 * (80.0D0 + 460.0D0) / (xairtemp + 460.0D0)
        RHOAIR = RHOAIR * 454.0D0 / (0.3048D0 ** 3)
-       RHOSTK = RHOAIR * (airtemp + 460.0D0) / (xstacktemp + 460.0D0)
+       RHOSTK = RHOAIR * (xairtemp + 460.0D0) / (xstacktemp + 460.0D0)
 
        ! Momentum rise
        AREA   = PI * (xdiameter ** 2.0D0) / 4.0D0
@@ -1248,7 +1278,6 @@ c ============================================================================
 
        END IF
 
-
        ! ------------------------------------------------------------
        ! Gaussian plume concentration term
        ! ------------------------------------------------------------
@@ -1268,10 +1297,8 @@ c ============================================================================
          zz = 0.5D0 * ((HEFF / CAPSIG) ** 2.0D0)
          IF (zz .GT. 0.001D0 ) THEN
          pp = 2.032D0 * EXP(-zz) / (xmax * CAPSIG)
-         write(*,*)'a1',dist,xmax,HEFF,CAPSIG,pp
          ELSE
          pp = 2.032D0 / (xmax * CAPSIG)
-         write(*,*)'a2',dist,xmax,HEFF
          END IF
         else
          SIGMAZ = (0.06D0 * dist) / SQRT(1.0D0 + 0.0015D0 * dist)
@@ -1279,10 +1306,8 @@ c ============================================================================
          zz = 0.5D0 * ((HEFF / CAPSIG) ** 2.0D0)
          IF (zz .GT. 0.001D0 ) THEN
          pp = 2.032D0 * EXP(-zz) / (dist * CAPSIG)
-              write(*,*)'b1',dist,xmax,HEFF,CAPSIG,pp
          ELSE
          pp = 2.032D0 / (dist * CAPSIG)
-         write(*,*)'b2',dist,xmax,HEFF
          END IF
         endif
 
@@ -1307,29 +1332,29 @@ c ============================================================================
        ELSE
        IF (dist .LE. xcrit) THEN
        IF (xbldwidth .LE. xbldheight) THEN
-         xconc = ((xwindbinfreq / (1.0D0 - pctcalm)) * xrademis) / 
+!               xconc = ((xwindbinfreq / (1.0D0 - xpctcalm)) * xrademis) /
+               xconc = ((0.25 / (1.0D0 - xpctcalm)) * xrademis) / 
      &                 (PI * xwindbinspeed * 1.0D0 * xbldwidth)
        ELSE
-         xconc = ((xwindbinfreq / (1.0D0 - pctcalm)) * xrademis) /   
+!         xconc = ((xwindbinfreq / (1.0D0 - xpctcalm)) * xrademis) /
+         xconc = ((0.25 / (1.0D0 - xpctcalm)) * xrademis) /   
      &                 (PI * xwindbinspeed * 1.0D0 * xbldheight)
        END IF !condition where building width le building height
        ELSE
-       xconc = ((xwindbinfreq / (1.0D0 - pctcalm)) * xrademis * pp) / xwindbinspeed
+       xconc = ((xwindbinfreq / (1.0D0 - xpctcalm)) * xrademis * pp) / xwindbinspeed
        END IF !condition where dist lt xcrit
        END IF !condition where dist le 0.0 
 
        IF (xconc .LT. 1.0D-32) xconc = 1.0D-32
 
-
        ! Transit time from source to receptor (days)
        transittime = (dist / xwindbinspeed) * (1.0D0 / 3600.0D0) * (1.0D0 / 24.0D0)
-
 
        END SUBROUTINE calc_air_concentration
 
 !=================================================================================================
 
-       SUBROUTINE wetdep_calc(dist, pctcalm, rainfall,
+       SUBROUTINE wetdep_calc(dist, xpctcalm, xrainfall,
      & xwindbinfreq, xwindbinspeed, xrademis, xconc, wetdepadj)
 
 c ============================================================================
@@ -1344,16 +1369,16 @@ c ============================================================================
 
        IMPLICIT NONE
 
-       REAL*8  :: dist, pctcalm, wetdepadj
+       REAL*8  :: dist, xpctcalm, wetdepadj
        REAL*8  :: xwindbinfreq, xwindbinspeed
-       REAL*8  :: xrademis, xconc, rainfall, fdux
+       REAL*8  :: xrademis, xconc, xrainfall, fdux
 
-       fdux = (xwindbinfreq/(1.0-pctcalm)) / (xwindbinspeed * dist)
+       fdux = (xwindbinfreq/(1.0-xpctcalm)) / (xwindbinspeed * dist)
 
      
      
-!       wetdepadj = (8.0 * fdux * rainfall * 1.0E-05 * xrademis * 3600. * 24.) / (3.1416*xconc/xrademis*3600.*24.)
-       wetdepadj = (8.0 * fdux * rainfall * 1.0E-05 * xrademis * 3600. * 24.) / (3.1416*xconc)
+!       wetdepadj = (8.0 * fdux * xrainfall * 1.0E-05 * xrademis * 3600. * 24.) / (3.1416*xconc/xrademis*3600.*24.)
+       wetdepadj = (8.0 * fdux * xrainfall * 1.0E-05 * xrademis * 3600. * 24.) / (3.1416*xconc)
 
            !FDUX     = 0.25 / ( U * X )
            ! VWET = 8.0 * FDUX * RAINRATE * Cr * Q * SecPerDay / ( Pi * C )

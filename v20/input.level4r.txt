@@ -6,7 +6,7 @@ Contact person                       |None
 Contact phone number                 |919-000-0000
 Diagnostic output file (YES/NO)      |YES
 Number of stacks                     |2
-=====================================
+======= stack 1 =====================
 Source of wind data                  |NCDC
 Dates of coverage                    |1988 to 1989
 Wind data location                   |Grand Junction
@@ -55,6 +55,46 @@ Diameter (m)                         |1.5
 Stack temp (C)                       |13.89
 Vertical momentum                    |NO
 Emission rate (Ci/yr)                |2.00E+03
+========== Stack 2 ==================
+Source of wind data                  |NCDC
+Dates of coverage                    |1988 to 1989
+Wind data location                   |Grand Junction
+Distance to source                   |40 miles
+Air temperature (C)                  |12.2
+Number of wind sectors               |16
+Winds FROM,Frequency,Speed(m/s)      |N  ,0.054,3.84
+Winds FROM,Frequency,Speed(m/s)      |NNE,0.081,4.62
+Winds FROM,Frequency,Speed(m/s)      |NE ,0.113,3.89
+Winds FROM,Frequency,Speed(m/s)      |ENE,0.053,2.91
+Winds FROM,Frequency,Speed(m/s)      |E  ,0.071,2.44
+Winds FROM,Frequency,Speed(m/s)      |ESE,0.043,2.85
+Winds FROM,Frequency,Speed(m/s)      |SE ,0.047,3.95
+Winds FROM,Frequency,Speed(m/s)      |SSE,0.038,4.86
+Winds FROM,Frequency,Speed(m/s)      |S  ,0.145,4.83
+Winds FROM,Frequency,Speed(m/s)      |SSW,0.104,5.18
+Winds FROM,Frequency,Speed(m/s)      |SW ,0.074,4.91
+Winds FROM,Frequency,Speed(m/s)      |WSW,0.029,4.21
+Winds FROM,Frequency,Speed(m/s)      |W  ,0.036,4.01
+Winds FROM,Frequency,Speed(m/s)      |WNW,0.038,5.54
+Winds FROM,Frequency,Speed(m/s)      |NW ,0.044,5.03
+Winds FROM,Frequency,Speed(m/s)      |NNW,0.021,4.69
+=====================================
+Receptor sector,receptor distance(m) |N  ,30000.
+Receptor sector,receptor distance(m) |NNE,25000.
+Receptor sector,receptor distance(m) |NE ,25000.
+Receptor sector,receptor distance(m) |ENE,25000.
+Receptor sector,receptor distance(m) |W  ,20000.
+Receptor sector,receptor distance(m) |ESE,20000.
+Receptor sector,receptor distance(m) |SE ,20000.
+Receptor sector,receptor distance(m) |SSE,20000.
+Receptor sector,receptor distance(m) |S  ,15000.
+Receptor sector,receptor distance(m) |SSW,15000.
+Receptor sector,receptor distance(m) |SW ,20000.
+Receptor sector,receptor distance(m) |WSW,20000.
+Receptor sector,receptor distance(m) |W  ,15000.
+Receptor sector,receptor distance(m) |WNW,20000.
+Receptor sector,receptor distance(m) |NW ,25000.
+Receptor sector,receptor distance(m) |NNW,30000.
 =====================================
 Latitude (degrees)                   |39.1
 Longitude(degrees)                   |-109.0
