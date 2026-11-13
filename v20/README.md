@@ -1,4 +1,4 @@
-# RELEASE NOTES for COMPLY v2.0, 10/27/2026
+# RELEASE NOTES for COMPLY v2.0, 11/13/2026
 
 More information about COMPLY is available at epa.gov/radiation/comply
 ***
@@ -22,3 +22,4 @@ New features, major updates, and bug fixes are described below compared to COMPL
 
 ### Minor changes
 * Percent calm winds calculated from the sum of sector wind frequencies and is no longer a user input
+* Version 2.0 only allows users to access default inhalation dose coefficients (v2.1 allows for selection of uptake speeds)

@@ -1,4 +1,4 @@
-# RELEASE NOTES for COMPLY v2.1, 09/29/2026
+# RELEASE NOTES for COMPLY v2.1, 11/13/2026
 
 More information about COMPLY is available at epa.gov/radiation/comply
 ***
