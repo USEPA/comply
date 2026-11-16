@@ -804,7 +804,12 @@ c ============================================================================
 
        if(receptor.eq.1) then 
             tempdose = immersion + inhalation + surface
-        if(tempdose.gt.maxdose) then 
+
+        !make a sector total for output report
+        sectordose(n,j) = sectordose(n,j) +
+     &  immersion+inhalation+surface+totvegdose+totmilkdose+totmeatdose
+
+       if(tempdose.gt.maxdose) then 
             maxdose = tempdose
             maxsector(n) = sectorname(n,j)
             distancemei(n) = dist
@@ -817,9 +822,6 @@ c ============================================================================
 
        enddo !end loop over distances between source and receptor (receptor)
 
-       !make a sector total for output report
-        sectordose(n,j) = sectordose(n,j) + 
-     &  immersion+inhalation+surface+totvegdose+totmilkdose+totmeatdose
        enddo !end loop over number of wind direction bins (j)
 
 c ============================================================================
