@@ -14,6 +14,6 @@ New features, major updates, and bug fixes are described below compared to COMPL
 * Includes an optional diagnostic file that provides gridded predictions
   
 ### Bug Fixes
-* The original v171 subroutines that calculate downwind distance where the ground-level concentration becomes maximum for a given release height have been changed to improve efficiency and correct minor bugs
+* The original v171 subroutines that calculate downwind distance where the ground-level air concentration becomes maximum for a given release height have been changed to improve efficiency and correct minor bugs
 
 
