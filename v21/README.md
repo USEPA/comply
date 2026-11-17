@@ -11,8 +11,9 @@ New features, major updates, and bug fixes are described below compared to COMPL
 * COMPLY v2.1 has decay rates and decay chains for 1252 nuclides compared to 826 in COMPLY v2.0
 * COMPLY v2.1 has up to 30 progeny in a decay chain compared to 19 in COMPLY v2.0
 * Ingestion transfer update information updated to be consistent with CAP88 v4.1.1 where feasible
+* Includes an optional diagnostic file that provides gridded predictions
   
 ### Bug Fixes
-* None
+* The original v171 subroutines that calculate downwind distance where the ground-level air concentration becomes maximum for a given release height have been changed to improve efficiency and correct minor bugs
 
 
