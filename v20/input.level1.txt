@@ -8,7 +8,7 @@ Number of stacks                                |1
 ================================================
 Latitude (degrees) - optional                   |37.5407
 Longitude(degrees) - optional                   |-77.4360
-Number of radionucs                             |3
+Number of radionuclides                         |3
 Nuclide,Form(Gas,Liquid,Solid,Conc),Amount(Ci/y)|I-131,G,2.00E-03
 Nuclide,Form(Gas,Liquid,Solid,Conc),Amount(Ci/y)|SE-75,G,2.00E-03
 Nuclide,Form(Gas,Liquid,Solid,Conc),Amount(Ci/y)|SR-85,L,3.50E+00
